@@ -1,18 +1,19 @@
 package aasim.ris;
 
 import javafx.application.Application;
-import javafx.geometry.Insets;
-import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 /**
  * JavaFX App
  */
 public class App extends Application {
+
+    public static User user = new User();
 
     @Override
     public void start(Stage stage) {
@@ -23,10 +24,66 @@ public class App extends Application {
         stage.setMaximized(true);
         stage.show();
         //
+
     }
 
     public static void main(String[] args) {
+        String fileName = "risDirectory";
+        createDatabase(fileName);
+        createTables(fileName);
         launch();
     }
 
+    //Create a database
+    public static void createDatabase(String fileName) {
+        String url = "jdbc:sqlite:C:/sqlite/" + fileName;
+        try {
+            Connection conn = DriverManager.getConnection(url);
+            if (conn != null) {
+                DatabaseMetaData meta = conn.getMetaData();
+                System.out.println("The driver name is " + meta.getDriverName());
+                System.out.println("A new database has been created.");
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    //Functionality only does Users as of now.
+    //In future, all tables to be created will be put in here
+    public static void createTables(String fileName) {
+        String url = "jdbc:sqlite:C://sqlite/" + fileName;
+        String sql = "CREATE TABLE users (\n"
+                + "	user_id INT NOT NULL AUTO_INCREMENT,\n"
+                + "	email VARCHAR(45) NOT NULL,\n"
+                + "	full_name VARCHAR(45) NOT NULL,\n"
+                + "	username VARCHAR(25) NOT NULL,\n"
+                + "	password VARCHAR(64) NOT NULL,\n"
+                + "     role TINYINT NOT NULL DEFAULT 0,\n"
+                + "	enabled BIT NOT NULL DEFAULT 1\n"
+                + ");";
+        try {
+            Connection conn = DriverManager.getConnection(url);
+            Statement stmt = conn.createStatement();
+            stmt.execute(sql);
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+
+    }
+
+    //Functionality only populates Users for now.
+    //In future, all population statements will be put in here
+    public static void populateTables(String fileName) {
+        String url = "jdbc:sqlite:C://sqlite/" + fileName;
+        String sql = "INSERT INTO users (email, full_name, username, password, role)\n"
+                + "VALUES ('popcorn@gmail.com', 'Jeffery Popcorn', 'admin', 'admin', '1');";
+        try {
+            Connection conn = DriverManager.getConnection(url);
+            Statement stmt = conn.createStatement();
+            stmt.execute(sql);
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
 }
