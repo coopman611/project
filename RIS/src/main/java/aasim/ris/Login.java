@@ -4,6 +4,11 @@
  */
 package aasim.ris;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -42,8 +47,9 @@ public class Login extends Stage {
         btnLogin.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent e) {
-
+                loginCheck();
             }
+
         });
         //Setting scene appropriately
         this.setScene(scene);
@@ -64,6 +70,34 @@ public class Login extends Stage {
         grid.setVgap(5);
         grid.getChildren().addAll(textUsername, inputUsername, textPassword, inputPassword, btnLogin);
         //
+
+    }
+
+    private void loginCheck() {
+        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
+
+        String username = inputUsername.getText();
+        String password = inputPassword.getText();
+        String sql = "Select * FROM users WHERE username = '" + username + "' AND password = '" + password + "' AND enabled = 1;";
+
+        try {
+            Connection conn = DriverManager.getConnection(url);
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+
+            int userId = rs.getInt(1);
+            String fullName = rs.getString(3);
+            int role = rs.getInt(6);
+            App.user = new User(userId, fullName, role);
+            if (App.user.getRole() == 1) {
+                //admin
+                Stage x = new Stage();
+                x.show();
+                this.hide();
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
 
     }
 
