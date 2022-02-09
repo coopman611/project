@@ -14,6 +14,7 @@ import java.sql.Statement;
 public class App extends Application {
 
     public static User user = new User();
+    public static String fileName = "risDirectory";
 
     @Override
     public void start(Stage stage) {
@@ -28,9 +29,9 @@ public class App extends Application {
     }
 
     public static void main(String[] args) {
-        String fileName = "risDirectory";
         createDatabase(fileName);
         createTables(fileName);
+        populateTables(fileName);
         launch();
     }
 
@@ -54,10 +55,10 @@ public class App extends Application {
     public static void createTables(String fileName) {
         String url = "jdbc:sqlite:C://sqlite/" + fileName;
         String sql = "CREATE TABLE users (\n"
-                + "	user_id INT NOT NULL AUTO_INCREMENT,\n"
-                + "	email VARCHAR(45) NOT NULL,\n"
+                + "	user_id INTEGER PRIMARY KEY ,\n"
+                + "	email VARCHAR(45) UNIQUE NOT NULL,\n"
                 + "	full_name VARCHAR(45) NOT NULL,\n"
-                + "	username VARCHAR(25) NOT NULL,\n"
+                + "	username VARCHAR(25) UNIQUE NOT NULL,\n"
                 + "	password VARCHAR(64) NOT NULL,\n"
                 + "     role TINYINT NOT NULL DEFAULT 0,\n"
                 + "	enabled BIT NOT NULL DEFAULT 1\n"
