@@ -29,9 +29,11 @@ public class App extends Application {
     }
 
     public static void main(String[] args) {
-        createDatabase(fileName);
-        createTables(fileName);
-        populateTables(fileName);
+//        createDatabase(fileName);
+//        createUserTable(fileName);
+//        createAppointmentTable(fileName);
+//        populateTables(fileName);
+//        populateTables2(fileName);
         launch();
     }
 
@@ -52,7 +54,7 @@ public class App extends Application {
 
     //Functionality only does Users as of now.
     //In future, all tables to be created will be put in here
-    public static void createTables(String fileName) {
+    public static void createUserTable(String fileName) {
         String url = "jdbc:sqlite:C://sqlite/" + fileName;
         String sql = "CREATE TABLE users (\n"
                 + "	user_id INTEGER PRIMARY KEY ,\n"
@@ -73,12 +75,21 @@ public class App extends Application {
 
     }
 
-    //Functionality only populates Users for now.
-    //In future, all population statements will be put in here
-    public static void populateTables(String fileName) {
+    public static void createAppointmentTable(String fileName) {
         String url = "jdbc:sqlite:C://sqlite/" + fileName;
-        String sql = "INSERT INTO users (email, full_name, username, password, role)\n"
-                + "VALUES ('popcorn@gmail.com', 'Jeffery Popcorn', 'admin', 'admin', '1');";
+        //apptId, patientID, fullname, time, address, insurance, referral, status, order
+        String sql = "CREATE TABLE appointments (\n"
+                + "	appt_id INTEGER PRIMARY KEY ,\n"
+                + "	patient_id INTEGER UNIQUE NOT NULL,\n"
+                + "	full_name VARCHAR(45) NOT NULL,\n"
+                + "	time VARCHAR(25) NOT NULL,\n"
+                + "	address VARCHAR(64) NOT NULL,\n"
+                + "     insurance VARCHAR(64) NOT NULL,\n"
+                + "     referral_doc_id VARCHAR(64) NOT NULL,\n"
+                + "     statusCode INTEGER NOT NULL,\n" //0 inprogress, 1 complete
+                + "	patient_order VARCHAR(45)\n"
+                + ");";
+
         try {
             Connection conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
@@ -86,5 +97,36 @@ public class App extends Application {
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
+
     }
+
+    //Functionality only populates Users for now.
+    //In future, all population statements will be put in here
+    public static void populateTables(String fileName) {
+        String url = "jdbc:sqlite:C://sqlite/" + fileName;
+        String sql = "INSERT INTO users(email, full_name, username, password, role) VALUES ('exampleemail@gmail.com', 'Sadie Greenhorn', 'receptionist', 'receptionist', '2');\n";
+        try {
+
+            Connection conn = DriverManager.getConnection(url);
+            Statement stmt = conn.createStatement();
+            stmt.execute(sql);
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    public static void populateTables2(String fileName) {
+        String url = "jdbc:sqlite:C://sqlite/" + fileName;
+        String sql = "INSERT INTO appointments(patient_id, full_name, time, address, insurance, referral_doc_id, patient_order, statusCode) VALUES('0','Loki Barnes','2022-02-24 18:00', '3012 Popcorn Avenue, Texas Illinois', 'PeachTree Healthcare', '0', 'xray', '0');";
+        try {
+
+            Connection conn = DriverManager.getConnection(url);
+            Statement stmt = conn.createStatement();
+            stmt.execute(sql);
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
 }
+//INSERT INTO appointments(patient_id, full_name, time, address, insurance, referral_doc_id, patient_order, statusCode) VALUES('0','Loki Barnes','2022-02-24 18:00', '3012 Popcorn Avenue, Texas Illinois', 'PeachTree Healthcare', '0', 'xray', '0');"

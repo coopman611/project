@@ -15,7 +15,7 @@ public class User {
     private int role = -1;
 
     User() {
-        System.out.println("User has no functionality yet.");
+//        System.out.println("User has no functionality yet.");
     }
 
     User(int userID, String fullName, int role) {
