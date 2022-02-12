@@ -43,7 +43,7 @@ public class Login extends Stage {
         this.setTitle("RIS- Radiology Information System (Logging In)");
         //edit gridPane to look better
         changeGridPane();
-        //Button Logic 
+        //ON button click
         btnLogin.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent e) {
@@ -73,6 +73,11 @@ public class Login extends Stage {
 
     }
 
+//  loginCheck()
+//    Checks user inputted username/password
+//    Gets user, sets local user
+//    Opens new stage for user's role
+//    
     private void loginCheck() {
         String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
 
@@ -89,10 +94,12 @@ public class Login extends Stage {
             String fullName = rs.getString(3);
             int role = rs.getInt(6);
             App.user = new User(userId, fullName, role);
-            if (App.user.getRole() == 1) {
-                //admin
-                Stage x = new Stage();
+            //
+            if (App.user.getRole() == 2) {
+                //Receptionist
+                Stage x = new Receptionist();
                 x.show();
+                x.setMaximized(true);
                 this.hide();
             }
         } catch (SQLException e) {
