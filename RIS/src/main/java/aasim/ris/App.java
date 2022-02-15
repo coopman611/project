@@ -29,11 +29,12 @@ public class App extends Application {
     }
 
     public static void main(String[] args) {
-//        createDatabase(fileName);
-//        createUserTable(fileName);
-//        createAppointmentTable(fileName);
-//        populateTables(fileName);
-//        populateTables2(fileName);
+        createDatabase(fileName);
+        createUserTable(fileName);
+        createAppointmentTable(fileName);
+        populateTables(fileName);
+        populateTables2(fileName);
+//        populateTables3(fileName);
         launch();
     }
 
@@ -47,6 +48,7 @@ public class App extends Application {
                 System.out.println("The driver name is " + meta.getDriverName());
                 System.out.println("A new database has been created.");
             }
+            conn.close();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
@@ -69,6 +71,8 @@ public class App extends Application {
             Connection conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
             stmt.execute(sql);
+            stmt.close();
+            conn.close();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
@@ -80,7 +84,7 @@ public class App extends Application {
         //apptId, patientID, fullname, time, address, insurance, referral, status, order
         String sql = "CREATE TABLE appointments (\n"
                 + "	appt_id INTEGER PRIMARY KEY ,\n"
-                + "	patient_id INTEGER UNIQUE NOT NULL,\n"
+                + "	patient_id INTEGER NOT NULL,\n"
                 + "	full_name VARCHAR(45) NOT NULL,\n"
                 + "	time VARCHAR(25) NOT NULL,\n"
                 + "	address VARCHAR(64) NOT NULL,\n"
@@ -94,6 +98,8 @@ public class App extends Application {
             Connection conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
             stmt.execute(sql);
+            stmt.close();
+            conn.close();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
@@ -110,6 +116,8 @@ public class App extends Application {
             Connection conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
             stmt.execute(sql);
+            stmt.close();
+            conn.close();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
@@ -123,6 +131,23 @@ public class App extends Application {
             Connection conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
             stmt.execute(sql);
+            stmt.close();
+            conn.close();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    public static void populateTables3(String fileName) {
+        String url = "jdbc:sqlite:C://sqlite/" + fileName;
+        String sql = "INSERT INTO appointments(patient_id, full_name, time, address, insurance, referral_doc_id, patient_order, statusCode) VALUES('" + 105 + "','Loki Barnes','2022-02-24 18:00', '3012 Popcorn Avenue, Texas Illinois', 'PeachTree Healthcare', '0', 'xray', '0');";
+        try {
+
+            Connection conn = DriverManager.getConnection(url);
+            Statement stmt = conn.createStatement();
+            stmt.execute(sql);
+            stmt.close();
+            conn.close();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
