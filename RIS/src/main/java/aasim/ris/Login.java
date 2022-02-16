@@ -95,6 +95,10 @@ public class Login extends Stage {
             int role = rs.getInt(6);
             App.user = new User(userId, fullName, role);
             //
+            rs.close();
+            stmt.close();
+            conn.close();
+            //
             if (App.user.getRole() == 2) {
                 //Receptionist
                 Stage x = new Receptionist();
