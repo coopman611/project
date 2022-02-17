@@ -8,6 +8,8 @@ package aasim.ris;
  *
  * @author 14048
  */
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -16,6 +18,11 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -23,19 +30,24 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 public class Receptionist extends Stage {
 
+    //<editor-fold>
     //Stage Structure
     HBox navbar = new HBox();
     Button logOut = new Button("Log Out");
@@ -47,26 +59,41 @@ public class Receptionist extends Stage {
     TableColumn patientIDCol = new TableColumn("Patient ID");
     TableColumn firstNameCol = new TableColumn("Full Name");
     TableColumn timeCol = new TableColumn("Time of Appt.");
-    TableColumn addressCol = new TableColumn("Mailing Address");
-    TableColumn insuranceCol = new TableColumn("Insurance Provider");
+    TableColumn orderCol = new TableColumn("Orders Requested");
+//    TableColumn addressCol = new TableColumn("Mailing Address");
+//    TableColumn insuranceCol = new TableColumn("Insurance Provider");
     TableColumn referralDocCol = new TableColumn("Referral Doctor ID");
     TableColumn status = new TableColumn("Status");
+    //Search Bar
+    FilteredList<Appointment> flAppointment;
+    ChoiceBox<String> choiceBox = new ChoiceBox();
+    TextField search = new TextField("Search Appointments");
 
+    //Buttons
     Button addAppointment = new Button("Add Appointment");
     Button refreshTable = new Button("Refresh Appointments");
     Button updateAppointment = new Button("Update Appointment");
-    HBox buttonContainer = new HBox(addAppointment, refreshTable, updateAppointment);
+    //Containers
+    HBox searchContainer = new HBox(choiceBox, search);
+    HBox buttonContainer = new HBox(addAppointment, refreshTable, updateAppointment, searchContainer);
     VBox tableContainer = new VBox(table, buttonContainer);
-
+//</editor-fold>
     //Populate the stage
+
     Receptionist() {
         this.setTitle("RIS- Radiology Information System (Reception)");
-        //Scene structure
         //Navbar
         navbar.setAlignment(Pos.TOP_RIGHT);
+        logOut.setPrefHeight(30);
         navbar.getChildren().add(logOut);
         navbar.setStyle("-fx-background-color: #2f4f4f; -fx-spacing: 15;");
+        main.setTop(navbar);
+        //End navbar
 
+        //Putting center code here as to not clutter stuff
+        loadCenter();
+
+        //Buttons
         logOut.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent e) {
@@ -92,14 +119,47 @@ public class Receptionist extends Stage {
             }
         });
 
-        main.setTop(navbar);
-        //End navbar
+        //Searchbar Structure
+        searchContainer.setAlignment(Pos.TOP_RIGHT);
+        HBox.setHgrow(searchContainer, Priority.ALWAYS);
+        choiceBox.setPrefHeight(40);
+        search.setPrefHeight(40);
+        choiceBox.getItems().addAll("Appointment ID", "Patient ID", "Full Name", "Date/Time", "Address", "Insurance", "Referral Doctor", "Status");
+        choiceBox.setValue("Appointment ID");
+        search.textProperty().addListener((obs, oldValue, newValue) -> {
+            if (choiceBox.getValue().equals("Appointment ID")) {
+                flAppointment.setPredicate(p -> new String(p.getApptId() + "").contains(newValue));//filter table by Full name
+            }
+            if (choiceBox.getValue().equals("Patient ID")) {
+                flAppointment.setPredicate(p -> new String(p.getPatientID() + "").contains(newValue));//filter table by Full name
+            }
+            if (choiceBox.getValue().equals("Full Name")) {
+                flAppointment.setPredicate(p -> p.getFullname().contains(newValue));//filter table by Full name
+            }
+            if (choiceBox.getValue().equals("Date/Time")) {
+                flAppointment.setPredicate(p -> p.getTime().contains(newValue));//filter table by Full name
+            }
+//            if (choiceBox.getValue().equals("Address")) {
+//                flAppointment.setPredicate(p -> p.getAddress().contains(newValue));//filter table by Full name
+//            }
+//            if (choiceBox.getValue().equals("Insurance")) {
+//                flAppointment.setPredicate(p -> p.getInsurance().contains(newValue));//filter table by Full name
+//            }
+            if (choiceBox.getValue().equals("Referral Doctor")) {
+                flAppointment.setPredicate(p -> p.getReferral().contains(newValue));//filter table by Full name
+            }
+            if (choiceBox.getValue().equals("Status")) {
+                flAppointment.setPredicate(p -> p.getStatus().contains(newValue));//filter table by Full name
+            }
+            table.getItems().clear();
+            table.getItems().addAll(flAppointment);
+        });
+        //End Searchbar Structure
+        //Scene Structure
         scene.getStylesheets().add("file:stylesheet.css");
         this.setScene(scene);
         //End scene
 
-        //Putting center code here as to not clutter stuff
-        loadCenter();
         //This function populates the table, making sure all NONCOMPLETED appointments are viewable
         populateTable();
 
@@ -117,21 +177,23 @@ public class Receptionist extends Stage {
         patientIDCol.setCellValueFactory(new PropertyValueFactory<>("patientID"));
         firstNameCol.setCellValueFactory(new PropertyValueFactory<>("fullname"));
         timeCol.setCellValueFactory(new PropertyValueFactory<>("time"));
-        addressCol.setCellValueFactory(new PropertyValueFactory<>("address"));
-        insuranceCol.setCellValueFactory(new PropertyValueFactory<>("insurance"));
+        orderCol.setCellValueFactory(new PropertyValueFactory<>("order"));
+//        addressCol.setCellValueFactory(new PropertyValueFactory<>("address"));
+//        insuranceCol.setCellValueFactory(new PropertyValueFactory<>("insurance"));
         referralDocCol.setCellValueFactory(new PropertyValueFactory<>("referral"));
         status.setCellValueFactory(new PropertyValueFactory<>("status"));
         //Set Column Widths
-        apptIDCol.prefWidthProperty().bind(table.widthProperty().multiply(0.05));
+        apptIDCol.prefWidthProperty().bind(table.widthProperty().multiply(0.1));
         patientIDCol.prefWidthProperty().bind(table.widthProperty().multiply(0.05));
         firstNameCol.prefWidthProperty().bind(table.widthProperty().multiply(0.1));
         timeCol.prefWidthProperty().bind(table.widthProperty().multiply(0.1));
-        addressCol.prefWidthProperty().bind(table.widthProperty().multiply(0.3));
-        insuranceCol.prefWidthProperty().bind(table.widthProperty().multiply(0.1));
+        orderCol.prefWidthProperty().bind(table.widthProperty().multiply(0.4));
+//        addressCol.prefWidthProperty().bind(table.widthProperty().multiply(0.3));
+//        insuranceCol.prefWidthProperty().bind(table.widthProperty().multiply(0.1));
         referralDocCol.prefWidthProperty().bind(table.widthProperty().multiply(0.1));
-        status.prefWidthProperty().bind(table.widthProperty().multiply(0.1));
+        status.prefWidthProperty().bind(table.widthProperty().multiply(0.15));
         //Add columns to table
-        table.getColumns().addAll(apptIDCol, patientIDCol, firstNameCol, timeCol, addressCol, insuranceCol, referralDocCol, status);
+        table.getColumns().addAll(apptIDCol, patientIDCol, firstNameCol, timeCol, orderCol, referralDocCol, status);
         table.setStyle("-fx-background-color: #25A18E; -fx-text-fill: WHITE; ");
         main.setCenter(tableContainer);
     }
@@ -150,12 +212,14 @@ public class Receptionist extends Stage {
             ResultSet rs = stmt.executeQuery(sql);
             //
             List<Appointment> list = new ArrayList<Appointment>();
+
             while (rs.next()) {
                 //What I receieve:  apptId, patientID, fullname, time, address, insurance, referral, status, order
                 Appointment appt = new Appointment(rs.getInt("appt_id"), rs.getInt("patient_id"), rs.getString("full_name"), rs.getString("time"), rs.getString("address"), rs.getString("insurance"), rs.getString("referral_doc_id"), rs.getString("statusCode"), rs.getString("patient_order"));
                 list.add(appt);
             }
-            table.getItems().addAll(list);
+            flAppointment = new FilteredList(FXCollections.observableList(list), p -> true);
+            table.getItems().addAll(flAppointment);
             //
             rs.close();
             stmt.close();
@@ -203,8 +267,10 @@ public class Receptionist extends Stage {
     //Private Nested Class 1
     //For the Add Appointment
     private class AddAppointment extends Stage {
-
+        //Class Variables, hidden behind an editor-fold
+// <editor-fold>
 //    Labels
+
         private Label patID = new Label("Patient ID");
         private Label patName = new Label("Patient's Full Name");
         private Label patAddress = new Label("Patient's Mailing Address");
@@ -233,6 +299,7 @@ public class Receptionist extends Stage {
 //    VBox
         VBox localmain = new VBox(placeholder1, placeholder2, placeholder3, submit);
         Scene temp = new Scene(localmain);
+// </editor-fold>
 
         public AddAppointment() {
             localmain.setPadding(new Insets(10));
@@ -266,23 +333,46 @@ public class Receptionist extends Stage {
                     String doc = patDocText.getText();
                     String order = patOrderText.getText();
 
-                    if (!name.matches("[a-zA-Z ]+") || !insurance.matches("[a-zA-Z ]+") || !doc.matches("[a-zA-Z ]+")) {
+                    if (!patNameText.getText().matches("^[A-Za-z ]*$+")) {
                         everythingCool = false;
                         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
                         alert.setTitle("Improper Inputs");
-                        alert.setContentText("Please check your inputs for Name, Insurance, and Referral Doctor. Numbers and Special Characters are not allowed.");
+                        alert.setContentText("Please input a proper name.");
+                        alert.showAndWait();
+                    }
+                    if (!patAddressText.getText().matches("^[A-Za-z0-9 ]*$")) {
+                        everythingCool = false;
+                        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                        alert.setTitle("Improper Inputs");
+                        alert.setContentText("Please input a proper address.");
                         alert.showAndWait();
                     }
 
-                    if (!address.matches("\\p{Alnum}*")) {
+                    if (!patInsuranceText.getText().matches("^[A-Za-z ]*$")) {
                         everythingCool = false;
                         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
                         alert.setTitle("Improper Inputs");
-                        alert.setContentText("Please check your inputs for the Address. Special Characters are not allowed.");
+                        alert.setContentText("Please input a proper insurance.");
                         alert.showAndWait();
                     }
+
+                    if (!patDocText.getText().matches("^[A-Za-z .]*$")) {
+                        everythingCool = false;
+                        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                        alert.setTitle("Improper Inputs");
+                        alert.setContentText("Please input a proper doctor.");
+                        alert.showAndWait();
+                    }
+                    if (!patOrderText.getText().matches("^[A-Za-z0-9 ,]*$")) {
+                        everythingCool = false;
+                        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                        alert.setTitle("Improper Inputs");
+                        alert.setContentText("Please input a proper order.");
+                        alert.showAndWait();
+                    }
+
                     try {
-                        Timestamp temp = Timestamp.valueOf(date + ":00");
+                        Timestamp temp = Timestamp.valueOf(patDateText.getText() + ":00");
                     } catch (IllegalArgumentException axd) {
                         everythingCool = false;
                         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
@@ -322,8 +412,10 @@ public class Receptionist extends Stage {
     //Private Nested Class 2
     //Update appointment
     private class UpdateAppointment extends Stage {
-
+//<editor-fold>
+        //Class Variables
 //    Labels
+
         private Label apptID = new Label("Appointment ID");
         private Label patID = new Label("Patient ID");
         private Label patName = new Label("Patient's Full Name");
@@ -357,11 +449,11 @@ public class Receptionist extends Stage {
 //    VBox
         VBox localmain = new VBox(placeholder1);
         Scene temp = new Scene(localmain);
+//</editor-fold>
 
         public UpdateAppointment() {
             localmain.setPadding(new Insets(10));
             localmain.setSpacing(10);
-
             patNameText.setPrefWidth(150);
             patAddressText.setPrefWidth(150);
             patDateText.setPrefWidth(150);
@@ -374,12 +466,10 @@ public class Receptionist extends Stage {
             patInsuranceText.setMaxWidth(150);
             patDocText.setMaxWidth(150);
             patOrderText.setMaxWidth(150);
-
             placeholder1.setSpacing(10);
             placeholder2.setSpacing(10);
             placeholder3.setSpacing(10);
             placeholder4.setSpacing(10);
-
             submit.setOnAction(new EventHandler<ActionEvent>() {
                 @Override
                 public void handle(ActionEvent e) {
@@ -482,6 +572,7 @@ public class Receptionist extends Stage {
             //Connect to database
             String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
             String sql = "Select * FROM appointments WHERE appt_id = '" + apptID + "' AND patient_id = '" + patID + "';";
+            boolean everythingCool2ElectricBoogaloo = false;
             try {
                 Appointment appt = null;
                 Connection conn = DriverManager.getConnection(url);
@@ -491,27 +582,29 @@ public class Receptionist extends Stage {
 
                 while (rs.next()) {
                     //What I receieve:  apptId, patientID, fullname, time, address, insurance, referral, status, order
+                    everythingCool2ElectricBoogaloo = true;
                     appt = new Appointment(rs.getInt("appt_id"), rs.getInt("patient_id"), rs.getString("full_name"), rs.getString("time"), rs.getString("address"), rs.getString("insurance"), rs.getString("referral_doc_id"), rs.getString("statusCode"), rs.getString("patient_order"));
                 }
                 //
                 rs.close();
                 stmt.close();
                 conn.close();
-
-                apptIDText.setEditable(false);
-                patIDText.setEditable(false);
-                placeholder1.getChildren().remove(submit);
-                placeholder1.getChildren().addAll(statusCode, statusCodeText);
-                patNameText.setText(appt.getFullname());
-                patAddressText.setText(appt.getAddress());
-                patDateText.setText(appt.getTime());
-                statusCodeText.setText(appt.getStatus());
-                patInsuranceText.setText(appt.getInsurance());
-                patDocText.setText(appt.getReferral());
-                patOrderText.setText(appt.getOrder());
-                localmain.getChildren().addAll(placeholder2, placeholder3, placeholder4, update);
-                this.setHeight(300);
-                this.setWidth(1000);
+                if (everythingCool2ElectricBoogaloo) {
+                    apptIDText.setEditable(false);
+                    patIDText.setEditable(false);
+                    placeholder1.getChildren().remove(submit);
+                    placeholder1.getChildren().addAll(statusCode, statusCodeText);
+                    patNameText.setText(appt.getFullname());
+                    patAddressText.setText(appt.getAddress());
+                    patDateText.setText(appt.getTime());
+                    statusCodeText.setText(appt.getStatus());
+                    patInsuranceText.setText(appt.getInsurance());
+                    patDocText.setText(appt.getReferral());
+                    patOrderText.setText(appt.getOrder());
+                    localmain.getChildren().addAll(placeholder2, placeholder3, placeholder4, update);
+                    this.setHeight(300);
+                    this.setWidth(1000);
+                }
             } catch (SQLException e) {
                 System.out.println(e.getMessage());
             }
