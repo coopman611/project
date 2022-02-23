@@ -37,6 +37,7 @@ public class App extends Application {
 //        populateTablesReceptionist(fileName);
 //        populateTablesStatus(fileName);
 //        populateTablesTech(fileName);
+//          populateTablesDoc(fileName);
 
 //        Duplication bug if you run these multiple times, leave commented out
 //        populateTables2(fileName);

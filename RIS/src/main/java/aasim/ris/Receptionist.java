@@ -4,6 +4,7 @@ package aasim.ris;
  *
  * @author 14048
  */
+import datastorage.Appointment;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.sql.Connection;
