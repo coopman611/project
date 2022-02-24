@@ -1,13 +1,10 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package aasim.ris;
 
 /**
  *
  * @author 14048
  */
+import datastorage.Appointment;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.sql.Connection;
@@ -31,6 +28,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -183,15 +181,15 @@ public class Receptionist extends Stage {
         referralDocCol.setCellValueFactory(new PropertyValueFactory<>("referral"));
         status.setCellValueFactory(new PropertyValueFactory<>("status"));
         //Set Column Widths
-        apptIDCol.prefWidthProperty().bind(table.widthProperty().multiply(0.1));
-        patientIDCol.prefWidthProperty().bind(table.widthProperty().multiply(0.05));
+        apptIDCol.prefWidthProperty().bind(table.widthProperty().multiply(0.05));
+        patientIDCol.prefWidthProperty().bind(table.widthProperty().multiply(0.04));
         firstNameCol.prefWidthProperty().bind(table.widthProperty().multiply(0.1));
         timeCol.prefWidthProperty().bind(table.widthProperty().multiply(0.1));
         orderCol.prefWidthProperty().bind(table.widthProperty().multiply(0.4));
 //        addressCol.prefWidthProperty().bind(table.widthProperty().multiply(0.3));
 //        insuranceCol.prefWidthProperty().bind(table.widthProperty().multiply(0.1));
         referralDocCol.prefWidthProperty().bind(table.widthProperty().multiply(0.1));
-        status.prefWidthProperty().bind(table.widthProperty().multiply(0.15));
+        status.prefWidthProperty().bind(table.widthProperty().multiply(0.21));
         //Add columns to table
         table.getColumns().addAll(apptIDCol, patientIDCol, firstNameCol, timeCol, orderCol, referralDocCol, status);
         table.setStyle("-fx-background-color: #25A18E; -fx-text-fill: WHITE; ");
@@ -199,12 +197,16 @@ public class Receptionist extends Stage {
     }
 
     //Clear the table, query the database, populate table based on results.
-    //DOES NOT SHOW 'COMPLETED' (statusCode = 1) APPOINTMENTS. 
+    //DOES NOT SHOW 'COMPLETED' (statusCode = 4) APPOINTMENTS. 
     private void populateTable() {
         table.getItems().clear();
         //Connect to database
         String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
-        String sql = "Select * FROM appointments WHERE statusCode != 1 ORDER BY time DESC;";
+        String sql = "Select appt_id, patient_id, full_name, time, address, insurance, referral_doc_id, statusCode.status, patient_order"
+                + " FROM appointments"
+                + " INNER JOIN statusCode ON appointments.statusCode = statusCode.statusID"
+                + " WHERE statusCode != 4"
+                + " ORDER BY time DESC;";
 
         try {
             Connection conn = DriverManager.getConnection(url);
@@ -215,7 +217,7 @@ public class Receptionist extends Stage {
 
             while (rs.next()) {
                 //What I receieve:  apptId, patientID, fullname, time, address, insurance, referral, status, order
-                Appointment appt = new Appointment(rs.getInt("appt_id"), rs.getInt("patient_id"), rs.getString("full_name"), rs.getString("time"), rs.getString("address"), rs.getString("insurance"), rs.getString("referral_doc_id"), rs.getString("statusCode"), rs.getString("patient_order"));
+                Appointment appt = new Appointment(rs.getInt("appt_id"), rs.getInt("patient_id"), rs.getString("full_name"), rs.getString("time"), rs.getString("address"), rs.getString("insurance"), rs.getString("referral_doc_id"), rs.getString("status"), rs.getString("patient_order"));
                 list.add(appt);
             }
             flAppointment = new FilteredList(FXCollections.observableList(list), p -> true);
@@ -435,7 +437,9 @@ public class Receptionist extends Stage {
         private TextField patInsuranceText = new TextField("");
         private TextField patDocText = new TextField("");
         private TextField patOrderText = new TextField("");
-        private TextField statusCodeText = new TextField("");
+        ComboBox statusCodeText = new ComboBox();
+
+        private TextField statusCodeText1 = new TextField("");
 
 //    Button
         Button submit = new Button("Pull Data");
@@ -470,6 +474,7 @@ public class Receptionist extends Stage {
             placeholder2.setSpacing(10);
             placeholder3.setSpacing(10);
             placeholder4.setSpacing(10);
+            statusCodeText.getItems().addAll("Not Checked In", "Checked In", "Appointment In Progress", "Appointment In Progress - Orders Uploaded", "Appointment Completed", "Appointment Cancelled by Patient", "Appointment Cancelled by Faculty", "Patient Missed Appointment");
             submit.setOnAction(new EventHandler<ActionEvent>() {
                 @Override
                 public void handle(ActionEvent e) {
@@ -542,13 +547,6 @@ public class Receptionist extends Stage {
                         alert.setContentText("Please input a proper order.");
                         alert.showAndWait();
                     }
-                    if (!statusCodeText.getText().matches("[0-9]+")) {
-                        everythingCool = false;
-                        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                        alert.setTitle("Improper Inputs");
-                        alert.setContentText("Please input a proper statuscode.");
-                        alert.showAndWait();
-                    }
 
                     try {
                         Timestamp temp = Timestamp.valueOf(patDateText.getText() + ":00");
@@ -571,7 +569,10 @@ public class Receptionist extends Stage {
         private void pullData(int apptID, int patID) {
             //Connect to database
             String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
-            String sql = "Select * FROM appointments WHERE appt_id = '" + apptID + "' AND patient_id = '" + patID + "';";
+            String sql = "Select appt_id, patient_id, full_name, time, address, insurance, referral_doc_id, statusCode.status, patient_order"
+                    + " FROM appointments"
+                    + " INNER JOIN statusCode ON appointments.statusCode = statusCode.statusID"
+                    + " WHERE appt_id = '" + apptID + "' AND patient_id = '" + patID + "';";
             boolean everythingCool2ElectricBoogaloo = false;
             try {
                 Appointment appt = null;
@@ -583,7 +584,7 @@ public class Receptionist extends Stage {
                 while (rs.next()) {
                     //What I receieve:  apptId, patientID, fullname, time, address, insurance, referral, status, order
                     everythingCool2ElectricBoogaloo = true;
-                    appt = new Appointment(rs.getInt("appt_id"), rs.getInt("patient_id"), rs.getString("full_name"), rs.getString("time"), rs.getString("address"), rs.getString("insurance"), rs.getString("referral_doc_id"), rs.getString("statusCode"), rs.getString("patient_order"));
+                    appt = new Appointment(rs.getInt("appt_id"), rs.getInt("patient_id"), rs.getString("full_name"), rs.getString("time"), rs.getString("address"), rs.getString("insurance"), rs.getString("referral_doc_id"), rs.getString("status"), rs.getString("patient_order"));
                 }
                 //
                 rs.close();
@@ -597,7 +598,7 @@ public class Receptionist extends Stage {
                     patNameText.setText(appt.getFullname());
                     patAddressText.setText(appt.getAddress());
                     patDateText.setText(appt.getTime());
-                    statusCodeText.setText(appt.getStatus());
+                    statusCodeText.setValue(appt.getStatus());
                     patInsuranceText.setText(appt.getInsurance());
                     patDocText.setText(appt.getReferral());
                     patOrderText.setText(appt.getOrder());
@@ -612,7 +613,25 @@ public class Receptionist extends Stage {
 
         private void updateAppt() {
             String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
-            String sql = "UPDATE appointments SET full_name = '" + patNameText.getText() + "', time = '" + patDateText.getText() + "', address = '" + patAddressText.getText() + "', insurance = '" + patInsuranceText.getText() + "', referral_doc_id = '" + patDocText.getText() + "', statusCode = '" + statusCodeText.getText() + "', patient_order = '" + patOrderText.getText() + "' WHERE appt_id = '" + apptIDText.getText() + "' AND patient_id = '" + patIDText.getText() + "';";
+            int statusID = -1;
+            if (statusCodeText.getValue().equals("Not Checked In")) {
+                statusID = 0;
+            } else if (statusCodeText.getValue().equals("Checked In")) {
+                statusID = 1;
+            } else if (statusCodeText.getValue().equals("Appointment In Progress")) {
+                statusID = 2;
+            } else if (statusCodeText.getValue().equals("Appointment In Progress - Orders Uploaded")) {
+                statusID = 3;
+            } else if (statusCodeText.getValue().equals("Appointment Completed")) {
+                statusID = 4;
+            } else if (statusCodeText.getValue().equals("Appointment Cancelled by Patient")) {
+                statusID = 5;
+            } else if (statusCodeText.getValue().equals("Appointment Cancelled by Faculty")) {
+                statusID = 6;
+            } else if (statusCodeText.getValue().equals("Patient Missed Appointment")) {
+                statusID = 7;
+            }
+            String sql = "UPDATE appointments SET full_name = '" + patNameText.getText() + "', time = '" + patDateText.getText() + "', address = '" + patAddressText.getText() + "', insurance = '" + patInsuranceText.getText() + "', referral_doc_id = '" + patDocText.getText() + "', statusCode = '" + statusID + "', patient_order = '" + patOrderText.getText() + "' WHERE appt_id = '" + apptIDText.getText() + "' AND patient_id = '" + patIDText.getText() + "';";
             try {
                 Connection conn = DriverManager.getConnection(url);
                 Statement stmt = conn.createStatement();
@@ -626,6 +645,4 @@ public class Receptionist extends Stage {
         }
     }
 
-    //Private Nested Class 3
-    //Remove Appointment
 }
