@@ -1,6 +1,6 @@
 module aasim.ris {
     requires javafx.controls;
     requires java.sql;
-    opens datastorage;
+	requires javafx.graphics;
     exports aasim.ris;
 }

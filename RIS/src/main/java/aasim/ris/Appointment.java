@@ -4,7 +4,10 @@
  */
 package aasim.ris;
 
+import java.io.InputStream;
 import java.sql.Date;
+
+import javafx.scene.image.Image;
 
 /**
  *
@@ -14,6 +17,7 @@ public class Appointment {
 
     int apptId, patientID;
     String fullname, time, address, insurance, referral, status, order;
+    InputStream fulOrder;
 
     public Appointment() {
     }
@@ -29,7 +33,24 @@ public class Appointment {
         this.status = status;
         this.order = order;
     }
-
+	
+	  public Appointment(int apptId, int patientID, String fullname, String time, String status, String order, InputStream fulfilledOrder) { 
+	  this.apptId = apptId;
+	  this.patientID = patientID; this.fullname= fullname; this.time = time;
+	  this.status = status; 
+	  this.order = order; 
+	  this.fulOrder = fulfilledOrder;
+	  
+	  }
+	 
+	public InputStream getfulOrder() {
+		return fulOrder;
+	}
+	
+	public void setfulOrder() {
+		this.fulOrder = fulOrder;
+	}
+	 
     public int getApptId() {
         return apptId;
     }

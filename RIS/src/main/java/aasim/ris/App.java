@@ -29,18 +29,12 @@ public class App extends Application {
     }
 
     public static void main(String[] args) {
-//        createDatabase(fileName);
-//        createUserTable(fileName);
-//        createAppointmentTable(fileName);
-//        createPatientTable(fileName);
-//        createStatusCodesTable(fileName);
-//        populateTablesReceptionist(fileName);
-//        populateTablesStatus(fileName);
-//        populateTablesTech(fileName);
-//          populateTablesDoc(fileName);
-
-//        Duplication bug if you run these multiple times, leave commented out
-//        populateTables2(fileName);
+        createDatabase(fileName);
+        createUserTable(fileName);
+        createAppointmentTable(fileName);
+        populateTables(fileName);
+        populateTables2(fileName);
+        populateTablesTech(fileName);
 //        populateTables3(fileName);
         launch();
     }
@@ -90,7 +84,7 @@ public class App extends Application {
         String url = "jdbc:sqlite:C://sqlite/" + fileName;
         //apptId, patientID, fullname, time, address, insurance, referral, status, order
         String sql = "CREATE TABLE appointments (\n"
-                + "	appt_id INTEGER PRIMARY KEY UNIQUE,\n"
+                + "	appt_id INTEGER PRIMARY KEY ,\n"
                 + "	patient_id INTEGER NOT NULL,\n"
                 + "	full_name VARCHAR(45) NOT NULL,\n"
                 + "	time VARCHAR(25) NOT NULL,\n"
@@ -113,64 +107,9 @@ public class App extends Application {
 
     }
 
-    public static void createPatientTable(String fileName) {
-        String url = "jdbc:sqlite:C://sqlite/" + fileName;
-        String sql = "CREATE TABLE patients (\n"
-                + "	patientID INTEGER PRIMARY KEY ,\n"
-                + "	email VARCHAR(45) UNIQUE NOT NULL,\n"
-                + "	full_name VARCHAR(45) NOT NULL,\n"
-                + "	dob VARCHAR(45) NOT NULL,\n"
-                + "	address VARCHAR(64) NOT NULL,\n"
-                + "     insurance VARCHAR(64) NOT NULL,\n"
-                + "     referralDocId VARCHAR(64) NOT NULL,\n"
-                + "	patientOrder VARCHAR(100),\n"
-                + "	appointmentIDs VARCHAR(45)\n"
-                + ");";
-        try {
-            Connection conn = DriverManager.getConnection(url);
-            Statement stmt = conn.createStatement();
-            stmt.execute(sql);
-            stmt.close();
-            conn.close();
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-
-    }
-
-    public static void createStatusCodesTable(String fileName) {
-        String url = "jdbc:sqlite:C://sqlite/" + fileName;
-        String sql = "CREATE TABLE statusCode (\n"
-                + "	statusID VARCHAR(2),\n"
-                + "	status VARCHAR(45)\n"
-                + ");";
-        try {
-            Connection conn = DriverManager.getConnection(url);
-            Statement stmt = conn.createStatement();
-            stmt.execute(sql);
-            stmt.close();
-            conn.close();
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-
-    }
-
+    //Functionality only populates Users for now.
     //In future, all population statements will be put in here
-    public static void executeSQLStatement(String fileName, String sql) {
-        String url = "jdbc:sqlite:C://sqlite/" + fileName;
-        try {
-            Connection conn = DriverManager.getConnection(url);
-            Statement stmt = conn.createStatement();
-            stmt.execute(sql);
-            stmt.close();
-            conn.close();
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-    }
-
-    public static void populateTablesReceptionist(String fileName) {
+    public static void populateTables(String fileName) {
         String url = "jdbc:sqlite:C://sqlite/" + fileName;
         String sql = "INSERT INTO users(email, full_name, username, password, role) VALUES ('exampleemail@gmail.com', 'Sadie Greenhorn', 'receptionist', 'receptionist', '2');\n";
         try {
@@ -184,63 +123,26 @@ public class App extends Application {
             System.out.println(e.getMessage());
         }
     }
-
+    
     public static void populateTablesTech(String fileName) {
-        String url = "jdbc:sqlite:C://sqlite/" + fileName;
-        String sql = "INSERT INTO users(email, full_name, username, password, role) VALUES ('techdude@gmail.com', 'dude dude', 'tech', 'tech', '3');\n";
-        try {
+    	  String url = "jdbc:sqlite:C://sqlite/" + fileName;
+          String sql = "INSERT INTO users(email, full_name, username, password, role) VALUES ('techdude@gmail.com', 'dude dude', 'tech', 'tech', '3');\n";
+          try {
 
-            Connection conn = DriverManager.getConnection(url);
-            Statement stmt = conn.createStatement();
-            stmt.execute(sql);
-            stmt.close();
-            conn.close();
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-
-    }
-
-    public static void populateTablesStatus(String fileName) {
-        String sql = "INSERT INTO statusCode VALUES ('0', 'Not Checked In');\n";
-        String sql1 = "INSERT INTO statusCode VALUES ('1', 'Checked In');\n";
-        String sql2 = "INSERT INTO statusCode VALUES ('2', 'Appointment In Progress');\n";
-        String sql3 = "INSERT INTO statusCode VALUES ('3', 'Appointment In Progress - Orders Uploaded');\n";
-        String sql4 = "INSERT INTO statusCode VALUES ('4', 'Appointment Completed');\n";
-        String sql5 = "INSERT INTO statusCode VALUES ('5', 'Appointment Cancelled by Patient');\n";
-        String sql6 = "INSERT INTO statusCode VALUES ('6', 'Appointment Cancelled by Faculty');\n";
-        String sql7 = "INSERT INTO statusCode VALUES ('7', 'Patient Missed Appointment');\n";
-
-        executeSQLStatement(fileName, sql);
-        executeSQLStatement(fileName, sql1);
-        executeSQLStatement(fileName, sql2);
-        executeSQLStatement(fileName, sql3);
-        executeSQLStatement(fileName, sql4);
-        executeSQLStatement(fileName, sql5);
-        executeSQLStatement(fileName, sql6);
-        executeSQLStatement(fileName, sql7);
-
-    }
-
-    public static void populateTablesDoc(String fileName) {
-        String url = "jdbc:sqlite:C://sqlite/" + fileName;
-        String sql = "INSERT INTO users(email, full_name, username, password, role) VALUES ('notanorangutan@gmail.com', 'Orangutan Dave', 'doc', 'doc', '5');\n";
-        try {
-
-            Connection conn = DriverManager.getConnection(url);
-            Statement stmt = conn.createStatement();
-            stmt.execute(sql);
-            stmt.close();
-            conn.close();
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-
+              Connection conn = DriverManager.getConnection(url);
+              Statement stmt = conn.createStatement();
+              stmt.execute(sql);
+              stmt.close();
+              conn.close();
+          } catch (SQLException e) {
+              System.out.println(e.getMessage());
+          }
+      
     }
 
     public static void populateTables2(String fileName) {
         String url = "jdbc:sqlite:C://sqlite/" + fileName;
-        String sql = "INSERT INTO appointments(patient_id, full_name, time, address, insurance, referral_doc_id, patient_order, statusCode) VALUES('0','Loki Barnes','2022-02-24 18:00', '3012 Popcorn Avenue Texas Illinois', 'PeachTree Healthcare', 'Vad', 'xray', '0');";
+        String sql = "INSERT INTO appointments(patient_id, full_name, time, address, insurance, referral_doc_id, patient_order, statusCode) VALUES('0','Loki Barnes','2022-02-24 18:00', '3012 Popcorn Avenue, Texas Illinois', 'PeachTree Healthcare', '0', 'xray', '0');";
         try {
 
             Connection conn = DriverManager.getConnection(url);
@@ -255,7 +157,7 @@ public class App extends Application {
 
     public static void populateTables3(String fileName) {
         String url = "jdbc:sqlite:C://sqlite/" + fileName;
-        String sql = "INSERT INTO appointments(patient_id, full_name, time, address, insurance, referral_doc_id, patient_order, statusCode) VALUES('" + 1 + "','Candive Sharp','2022-02-24 18:30', '3013 Popcorn Avenue Texas Illinois', 'PeachTree Healthcare', 'Vad', 'xray', '0');";
+        String sql = "INSERT INTO appointments(patient_id, full_name, time, address, insurance, referral_doc_id, patient_order, statusCode) VALUES('" + 105 + "','Loki Barnes','2022-02-24 18:00', '3012 Popcorn Avenue, Texas Illinois', 'PeachTree Healthcare', '0', 'xray', '0');";
         try {
 
             Connection conn = DriverManager.getConnection(url);
@@ -269,3 +171,4 @@ public class App extends Application {
     }
 
 }
+//INSERT INTO appointments(patient_id, full_name, time, address, insurance, referral_doc_id, patient_order, statusCode) VALUES('0','Loki Barnes','2022-02-24 18:00', '3012 Popcorn Avenue, Texas Illinois', 'PeachTree Healthcare', '0', 'xray', '0');"
