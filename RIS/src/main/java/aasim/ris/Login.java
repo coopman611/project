@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package aasim.ris;
 
 import java.io.FileInputStream;
@@ -21,6 +17,7 @@ import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -43,13 +40,13 @@ public class Login extends Stage {
     private Label textUsername = new Label("Enter your Username:");
     private TextField inputUsername = new TextField("here");
     private Label textPassword = new Label("Enter your Password:");
-    private TextField inputPassword = new TextField("here");
+    private PasswordField inputPassword = new PasswordField();
     //Create Login Button. Logic for Button at End.
     private Button btnLogin = new Button("Login");
     private GridPane grid = new GridPane();
     VBox center = new VBox();
     Scene scene = new Scene(center, 1000, 1000);
-    
+
     Login() {
         //Setting the Title
         this.setTitle("RIS- Radiology Information System (Logging In)");
@@ -61,7 +58,7 @@ public class Login extends Stage {
             public void handle(ActionEvent e) {
                 loginCheck();
             }
-            
+
         });
         center.setId("loginpage");
         center.setSpacing(10);
@@ -79,9 +76,9 @@ public class Login extends Stage {
         //Setting scene appropriately
         scene.getStylesheets().add("file:stylesheet.css");
         this.setScene(scene);
-        
+
     }
-    
+
     private void changeGridPane() {
         //Gridpane does what Gridpane does best
         //Everything's on a grid. 
@@ -107,16 +104,16 @@ public class Login extends Stage {
 //    
     private void loginCheck() {
         String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
-        
+
         String username = inputUsername.getText();
         String password = inputPassword.getText();
         String sql = "Select * FROM users WHERE username = '" + username + "' AND password = '" + password + "' AND enabled = 1;";
-        
+
         try {
             Connection conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
-            
+
             int userId = rs.getInt(1);
             String fullName = rs.getString(3);
             int role = rs.getInt(6);
@@ -132,18 +129,17 @@ public class Login extends Stage {
                 x.show();
                 x.setMaximized(true);
                 this.hide();
-            }
-            else if (App.user.getRole() == 3) {
-            	//technician
-            	Stage x = new Technician();
-            	x.show();
-            	x.setMaximized(true);;
-            	this.hide();
+            } else if (App.user.getRole() == 5) {
+                //Referral Doctor
+                Stage x = new ReferralDoctor();
+                x.show();
+                x.setMaximized(true);
+                this.hide();
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
-        
+
     }
-    
+
 }
