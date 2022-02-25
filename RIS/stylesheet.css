@@ -1,0 +1,32 @@
+/*General Buttons*/
+.button{
+    -fx-background-color: #00A5CF;
+    -fx-padding:10;
+    -fx-text-fill: white;
+}
+.button:hover{
+    -fx-background-color: #9FFFCB;
+}
+/*Choice Box*/
+.choice-box{
+    -fx-background-color: #7AE582;
+    -fx-mark-color: #004E64;
+}
+.choice-box .context-menu {
+    -fx-background-color: #7AE582;
+}
+.choice-box .menu-item:focused {
+    -fx-background-color: #004E64;
+}
+.choice-box .menu-item > .label {
+    -fx-text-fill: black;
+
+}
+.choice-box .menu-item:focused > .label {
+    -fx-text-fill: white;
+}
+
+/*Login Page*/
+#loginpage{
+    -fx-background-color: #f5f3ef;
+}
