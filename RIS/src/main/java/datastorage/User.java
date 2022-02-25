@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package aasim.ris;
+package datastorage;
 
 /**
  *
@@ -14,14 +14,13 @@ public class User {
     private String fullName = "";
     private int role = -1;
 
-    User() {
-//        System.out.println("User has no functionality yet.");
-    }
-
-    User(int userID, String fullName, int role) {
+    public User(int userID, String fullName, int role) {
         setFullName(fullName);
         setRole(role);
         setUserID(userID);
+    }
+
+    public User() {
     }
 
     //Getters

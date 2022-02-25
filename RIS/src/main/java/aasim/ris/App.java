@@ -1,5 +1,6 @@
 package aasim.ris;
 
+import datastorage.User;
 import javafx.application.Application;
 import javafx.stage.Stage;
 import java.sql.Connection;
@@ -13,7 +14,7 @@ import java.sql.Statement;
  */
 public class App extends Application {
 
-    public static User user = new User();
+    public static User user;
     public static String fileName = "risDirectory";
 
     @Override

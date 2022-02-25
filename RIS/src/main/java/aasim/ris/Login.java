@@ -1,5 +1,6 @@
 package aasim.ris;
 
+import datastorage.User;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.sql.Connection;
@@ -126,6 +127,12 @@ public class Login extends Stage {
             if (App.user.getRole() == 2) {
                 //Receptionist
                 Stage x = new Receptionist();
+                x.show();
+                x.setMaximized(true);
+                this.hide();
+            } else if (App.user.getRole() == 3) {
+                //technician
+                Stage x = new Technician();
                 x.show();
                 x.setMaximized(true);
                 this.hide();

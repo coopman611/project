@@ -4,6 +4,7 @@
  */
 package aasim.ris;
 
+import datastorage.User;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -147,9 +148,9 @@ public class ReferralDoctor extends Stage {
         statusCol.prefWidthProperty().bind(patientsTable.widthProperty().multiply(0.3));
         orderRequestCol.prefWidthProperty().bind(patientsTable.widthProperty().multiply(0.2));
         orderSubmissionCol.prefWidthProperty().bind(patientsTable.widthProperty().multiply(0.3));
-        ordersTable.setStyle("-fx-background-color: #25A18E; -fx-text-fill: WHITE; ");
+//        ordersTable.setStyle("-fx-background-color: #25A18E; -fx-text-fill: WHITE; ");
         //So add it, oh Henry oh Henry, so add it indeed.
-        ordersTable.getColumns().addAll(orderIDCol, patientIDCol, statusCol, orderRequestCol, orderSubmissionCol);
+//        ordersTable.getColumns().addAll(orderIDCol, patientIDCol, statusCol, orderRequestCol, orderSubmissionCol);
 
     }
 

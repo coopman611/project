@@ -1,10 +1,9 @@
 aasim\ris\Receptionist$1.class
-aasim\ris\Receptionist$2.class
-aasim\ris\Login$1.class
 aasim\ris\SystemInfo.class
 aasim\ris\App.class
 module-info.class
-aasim\ris\User.class
 aasim\ris\Login.class
+aasim\ris\Receptionist$2.class
+aasim\ris\Login$1.class
 aasim\ris\Receptionist$3.class
 aasim\ris\Receptionist.class
