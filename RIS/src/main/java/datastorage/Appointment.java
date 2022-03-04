@@ -5,7 +5,7 @@
 package datastorage;
 
 import java.io.InputStream;
-import java.sql.Date;
+import javafx.scene.control.Button;
 
 /**
  *
@@ -16,6 +16,11 @@ public class Appointment {
     int apptId, patientID;
     String fullname, time, address, insurance, referral, status, order;
     InputStream fulOrder;
+    public Button updateAppt = new Button("Update Order");
+
+    public Button getUpdateAppt() {
+        return updateAppt;
+    }
 
     public Appointment() {
     }

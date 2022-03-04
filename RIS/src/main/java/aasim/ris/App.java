@@ -30,19 +30,21 @@ public class App extends Application {
     }
 
     public static void main(String[] args) {
+        //Create
 //        createDatabase(fileName);
 //        createUserTable(fileName);
 //        createAppointmentTable(fileName);
 //        createPatientTable(fileName);
 //        createStatusCodesTable(fileName);
+//        createOrderCodesTable(fileName);
+//        createImageTable(fileName);
+//        //Populate
 //        populateTablesReceptionist(fileName);
 //        populateTablesStatus(fileName);
 //        populateTablesTech(fileName);
-//          populateTablesDoc(fileName);
-
-//        Duplication bug if you run these multiple times, leave commented out
-//        populateTables2(fileName);
-//        populateTables3(fileName);
+//        populateTablesDoc(fileName);
+////        Duplication bug if you run these multiple times, leave commented out
+//        populateAppointments(fileName);
         launch();
     }
 
@@ -142,8 +144,46 @@ public class App extends Application {
     public static void createStatusCodesTable(String fileName) {
         String url = "jdbc:sqlite:C://sqlite/" + fileName;
         String sql = "CREATE TABLE statusCode (\n"
-                + "	statusID VARCHAR(2),\n"
+                + "	statusID INTEGER PRIMARY KEY,\n"
                 + "	status VARCHAR(45)\n"
+                + ");";
+        try {
+            Connection conn = DriverManager.getConnection(url);
+            Statement stmt = conn.createStatement();
+            stmt.execute(sql);
+            stmt.close();
+            conn.close();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+
+    }
+
+    public static void createOrderCodesTable(String fileName) {
+        String url = "jdbc:sqlite:C://sqlite/" + fileName;
+        String sql = "CREATE TABLE orderCodes (\n"
+                + "	orderID INTEGER PRIMARY KEY,\n"
+                + "	orders VARCHAR(45)\n"
+                + ");";
+        try {
+            Connection conn = DriverManager.getConnection(url);
+            Statement stmt = conn.createStatement();
+            stmt.execute(sql);
+            stmt.close();
+            conn.close();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+
+    }
+
+    public static void createImageTable(String fileName) {
+        String url = "jdbc:sqlite:C://sqlite/" + fileName;
+        String sql = "CREATE TABLE images (\n"
+                + "	imageID INTEGER PRIMARY KEY,\n"
+                + "	patientID INTEGER,\n"
+                + "	apptID INTEGER,\n"
+                + "	image BLOB\n"
                 + ");";
         try {
             Connection conn = DriverManager.getConnection(url);
@@ -172,34 +212,13 @@ public class App extends Application {
     }
 
     public static void populateTablesReceptionist(String fileName) {
-        String url = "jdbc:sqlite:C://sqlite/" + fileName;
         String sql = "INSERT INTO users(email, full_name, username, password, role) VALUES ('exampleemail@gmail.com', 'Sadie Greenhorn', 'receptionist', 'receptionist', '2');\n";
-        try {
-
-            Connection conn = DriverManager.getConnection(url);
-            Statement stmt = conn.createStatement();
-            stmt.execute(sql);
-            stmt.close();
-            conn.close();
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
+        executeSQLStatement(fileName, sql);
     }
 
     public static void populateTablesTech(String fileName) {
-        String url = "jdbc:sqlite:C://sqlite/" + fileName;
         String sql = "INSERT INTO users(email, full_name, username, password, role) VALUES ('techdude@gmail.com', 'dude dude', 'tech', 'tech', '3');\n";
-        try {
-
-            Connection conn = DriverManager.getConnection(url);
-            Statement stmt = conn.createStatement();
-            stmt.execute(sql);
-            stmt.close();
-            conn.close();
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-
+        executeSQLStatement(fileName, sql);
     }
 
     public static void populateTablesStatus(String fileName) {
@@ -224,49 +243,15 @@ public class App extends Application {
     }
 
     public static void populateTablesDoc(String fileName) {
-        String url = "jdbc:sqlite:C://sqlite/" + fileName;
         String sql = "INSERT INTO users(email, full_name, username, password, role) VALUES ('notanorangutan@gmail.com', 'Orangutan Dave', 'doc', 'doc', '5');\n";
-        try {
-
-            Connection conn = DriverManager.getConnection(url);
-            Statement stmt = conn.createStatement();
-            stmt.execute(sql);
-            stmt.close();
-            conn.close();
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-
+        executeSQLStatement(fileName, sql);
     }
 
-    public static void populateTables2(String fileName) {
-        String url = "jdbc:sqlite:C://sqlite/" + fileName;
+    private static void populateAppointments(String fileName) {
         String sql = "INSERT INTO appointments(patient_id, full_name, time, address, insurance, referral_doc_id, patient_order, statusCode) VALUES('0','Loki Barnes','2022-02-24 18:00', '3012 Popcorn Avenue Texas Illinois', 'PeachTree Healthcare', 'Vad', 'xray', '0');";
-        try {
-
-            Connection conn = DriverManager.getConnection(url);
-            Statement stmt = conn.createStatement();
-            stmt.execute(sql);
-            stmt.close();
-            conn.close();
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-    }
-
-    public static void populateTables3(String fileName) {
-        String url = "jdbc:sqlite:C://sqlite/" + fileName;
-        String sql = "INSERT INTO appointments(patient_id, full_name, time, address, insurance, referral_doc_id, patient_order, statusCode) VALUES('" + 1 + "','Candive Sharp','2022-02-24 18:30', '3013 Popcorn Avenue Texas Illinois', 'PeachTree Healthcare', 'Vad', 'xray', '0');";
-        try {
-
-            Connection conn = DriverManager.getConnection(url);
-            Statement stmt = conn.createStatement();
-            stmt.execute(sql);
-            stmt.close();
-            conn.close();
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
+        executeSQLStatement(fileName, sql);
+        sql = "INSERT INTO appointments(patient_id, full_name, time, address, insurance, referral_doc_id, patient_order, statusCode) VALUES('" + 1 + "','Candive Sharp','2022-02-24 18:30', '3013 Popcorn Avenue Texas Illinois', 'PeachTree Healthcare', 'Vad', 'xray', '0');";
+        executeSQLStatement(fileName, sql);
     }
 
 }
