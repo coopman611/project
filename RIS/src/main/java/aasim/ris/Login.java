@@ -136,7 +136,13 @@ public class Login extends Stage {
                 x.show();
                 x.setMaximized(true);
                 this.hide();
-            } else if (App.user.getRole() == 5) {
+            }else if(App.user.getRole()==4) {
+            	//radiologist
+            	Stage x = new Rad();
+            	x.show();
+            	x.setMaximized(true);
+            	this.hide();
+            }else if (App.user.getRole() == 5) {
                 //Referral Doctor
                 Stage x = new ReferralDoctor();
                 x.show();
