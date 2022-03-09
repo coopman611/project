@@ -1,5 +1,4 @@
 package aasim.ris;
-
 import datastorage.Appointment;
 import datastorage.User;
 import java.io.File;
@@ -38,90 +37,96 @@ import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Callback;
+import javafx.application.Application;
+import javafx.geometry.Insets;
+import javafx.scene.Scene;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 
-public class Technician extends Stage {
-    //Navbar
-
-    HBox navbar = new HBox();
-    Button logOut = new Button("Log Out");
-
-    //End Navbar
-    //table
-    TableView appointmentsTable = new TableView();
-    VBox tableContainer = new VBox(appointmentsTable);
-    //
-    //Scene
-    BorderPane main = new BorderPane();
-    Scene scene = new Scene(main);
-
-    //End Scene
-    private FilteredList flAppointment;
-    private final FileChooser fileChooser = new FileChooser();
-
-    public Technician() {
-        this.setTitle("RIS - Radiology Information System (Technician)");
-        //Navbar
-        navbar.setAlignment(Pos.TOP_RIGHT);
-        logOut.setPrefHeight(30);
-        logOut.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent e) {
-                logOut();
-            }
-        });
-        navbar.getChildren().add(logOut);
-        navbar.setStyle("-fx-background-color: #2f4f4f; -fx-spacing: 15;");
-        main.setTop(navbar);
-        //End navbar
-
-        //Center
-        main.setCenter(tableContainer);
-        createTableAppointments();
-        populateTable();
-        //End Center
-        //Set Scene and Structure
-        scene.getStylesheets().add("file:stylesheet.css");
-        this.setScene(scene);
-    }
-
-    private void createTableAppointments() {
-        //All of the Columns
-        TableColumn patientIDCol = new TableColumn("Patient ID");
-        TableColumn fullNameCol = new TableColumn("Full Name");
-        TableColumn timeCol = new TableColumn("Time");
-        TableColumn orderIDCol = new TableColumn("Orders Requested");
-        TableColumn statusCol = new TableColumn("Appointment Status");
-        TableColumn updateStatusCol = new TableColumn("Open Appointment");
-
-        //And all of the Value setting
-        patientIDCol.setCellValueFactory(new PropertyValueFactory<>("patientID"));
-        fullNameCol.setCellValueFactory(new PropertyValueFactory<>("fullname"));
-        timeCol.setCellValueFactory(new PropertyValueFactory<>("time"));
-        orderIDCol.setCellValueFactory(new PropertyValueFactory<>("order"));
-        statusCol.setCellValueFactory(new PropertyValueFactory<>("status"));
-        updateStatusCol.setCellValueFactory(new PropertyValueFactory<>("updateAppt"));
-
-        //Couldn't put all the styling
+public class Rad extends Stage{
+	//navbar
+	HBox navbar = new HBox();
+	Button logOut = new Button("Log Out");
+	
+	//end navbar
+	//table
+	TableView appointmentsTable = new TableView();
+	VBox tableContainer = new VBox (appointmentsTable);
+	
+	//scene
+	BorderPane main = new BorderPane();
+	Scene scene = new Scene (main);
+	
+	//end scene
+	private FilteredList flAppointment;
+	private final FileChooser fileChooser = new FileChooser();
+	
+	public Rad() {
+		this.setTitle("RIS - Radiology Information System (Radiologist");
+		//navbar
+		navbar.setAlignment(Pos.TOP_RIGHT);
+		logOut.setPrefHeight(30);
+		logOut.setOnAction(new EventHandler<ActionEvent>(){
+			@Override
+			public void handle(ActionEvent e) {
+				logOut();
+			}
+		});
+		navbar.getChildren().add(logOut);
+		navbar.setStyle("-fx-background-color: #2f4f4f; -fx-spacing: 15;");
+		main.setTop(navbar);
+		//end navbar
+		
+		//center
+		main.setCenter(tableContainer);
+		createTableAppointments();
+		populateTable();
+		//end center
+		//set scene and structure
+		scene.getStylesheets().add("file:stylesheet.css");
+		this.setScene(scene);
+	}
+	
+	private void createTableAppointments() {
+		//columns of table
+		TableColumn patientIDCol=new TableColumn("Patient ID");
+		TableColumn fullNameCol = new TableColumn ("Full Name");
+		TableColumn timeCol = new TableColumn ("Time");
+		TableColumn orderIDCol = new TableColumn("Orders Requested");
+		TableColumn statusCol = new TableColumn ("Appoointment Status");
+		TableColumn reportCol = new TableColumn("Radiologist Report");
+		
+		//all of the value settings
+		patientIDCol.setCellValueFactory(new PropertyValueFactory<>("patientID"));
+		fullNameCol.setCellValueFactory(new PropertyValueFactory<>("fullname"));
+	    timeCol.setCellValueFactory(new PropertyValueFactory<>("time"));
+	    orderIDCol.setCellValueFactory(new PropertyValueFactory<>("order"));
+	    statusCol.setCellValueFactory(new PropertyValueFactory<>("status"));
+	    reportCol.setCellValueFactory(new PropertyValueFactory<>("updateAppt"));
+	    
+	    //Couldn't put all the styling
         patientIDCol.prefWidthProperty().bind(appointmentsTable.widthProperty().multiply(0.04));
         fullNameCol.prefWidthProperty().bind(appointmentsTable.widthProperty().multiply(0.06));
         timeCol.prefWidthProperty().bind(appointmentsTable.widthProperty().multiply(0.2));
         orderIDCol.prefWidthProperty().bind(appointmentsTable.widthProperty().multiply(0.3));
+        reportCol.prefWidthProperty().bind(appointmentsTable.widthProperty().multiply(0.3));
         appointmentsTable.setStyle("-fx-background-color: #25A18E; -fx-text-fill: WHITE; ");
         //Together again
-        appointmentsTable.getColumns().addAll(patientIDCol, fullNameCol, timeCol, orderIDCol, statusCol, updateStatusCol);
+        appointmentsTable.getColumns().addAll(patientIDCol, fullNameCol, timeCol, orderIDCol, statusCol, reportCol);
         //Add Status Update Column:
-    }
-
-    private void populateTable() {
-        appointmentsTable.getItems().clear();
-        //Connect to database
+	}
+	
+	private void populateTable() {
+		appointmentsTable.getItems().clear();
+		//connects to database
         String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
         String sql = "Select appt_id, patient_id, full_name, time, address, insurance, referral_doc_id, statusCode.status, patient_order"
                 + " FROM appointments"
                 + " INNER JOIN statusCode ON appointments.statusCode = statusCode.statusID"
                 + " WHERE statusCode != 4"
                 + " ORDER BY time DESC;";
-
         try {
             Connection conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
@@ -138,7 +143,7 @@ public class Technician extends Stage {
                 z.updateAppt.setOnAction(new EventHandler<ActionEvent>() {
                     @Override
                     public void handle(ActionEvent e) {
-                        techPageTwo(z.getPatientID(), z.getApptId(), z.getFullname(), z.getOrder(), z.getReferral(), z.getStatus());
+                        radPageTwo(z.getPatientID(), z.getApptId(), z.getFullname(), z.getOrder(), z.getReferral(), z.getStatus(), sql);
                     }
                 });
             }
@@ -150,9 +155,9 @@ public class Technician extends Stage {
             conn.close();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
-        }
-    }
-
+        }        
+	}
+	
     private void logOut() {
         App.user = new User();
         Stage x = new Login();
@@ -160,13 +165,13 @@ public class Technician extends Stage {
         x.setMaximized(true);
         this.close();
     }
-
-    private void techPageOne() {
+    
+    private void radOne() {
         populateTable();
         main.setCenter(tableContainer);
     }
-
-    private void techPageTwo(int patID, int apptId, String fullname, String order, String referral, String status) {
+ 
+    private void radPageTwo(int patID, int apptId, String fullname, String order, String referral, String status, String report) {
         VBox container = new VBox();
         container.setSpacing(10);
         container.setAlignment(Pos.CENTER);
@@ -180,8 +185,8 @@ public class Technician extends Stage {
         complete.setId("complete");
         Button cancel = new Button("Go Back");
         cancel.setId("cancel");
-        Button addImg = new Button("Upload Image");
-        HBox buttonContainer = new HBox(cancel, addImg, complete);
+        Button addReport = new Button("Upload Report");
+        HBox buttonContainer = new HBox(cancel, addReport, complete);
         buttonContainer.setAlignment(Pos.CENTER);
         buttonContainer.setSpacing(25);
         container.getChildren().addAll(patInfo, buttonContainer);
@@ -189,7 +194,7 @@ public class Technician extends Stage {
         //Set Size of Every button in buttonContainer
         complete.setPrefSize(200, 100);
         cancel.setPrefSize(200, 100);
-        addImg.setPrefSize(200, 100);
+        addReport.setPrefSize(200, 100);
         //
         cancel.setOnAction(new EventHandler<ActionEvent>() {
             @Override
@@ -199,10 +204,10 @@ public class Technician extends Stage {
             }
         });
 
-        addImg.setOnAction(new EventHandler<ActionEvent>() {
+        addReport.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent t) {
-                openFile(patID, apptId);
+                openFile(report, patID, apptId,order, referral);
 
             }
         });
@@ -215,33 +220,30 @@ public class Technician extends Stage {
         });
 
     }
-
-    private void openFile(int patID, int apptId) {
-        File file = fileChooser.showOpenDialog(this);
-        if (file != null) {
-            try {
-                Image img = new Image(new FileInputStream(file));
+    
+ 
+    private void openFile(String report,int patID, int apptId, String order, String referral) {
+            
+            
                 Stage x = new Stage();
                 x.initOwner(this);
                 x.initModality(Modality.WINDOW_MODAL);
                 x.setMaximized(true);
                 BorderPane y = new BorderPane();
-                Label label = new Label("You are uploading the image: " + file.getName());
+                Label label = new Label ("Report");
                 Button confirm = new Button("Confirm");
                 confirm.setId("complete");
+                
+                TextArea reportText = new TextArea();
+                reportText.getText();
 
                 Button cancel = new Button("Cancel");
                 cancel.setId("cancel");
-                HBox btnContainer = new HBox(cancel, confirm);
+                HBox btnContainer = new HBox(cancel, reportText, confirm);
                 btnContainer.setSpacing(25);
-                ScrollPane s1 = new ScrollPane(new ImageView(img));
-                s1.setPrefHeight(1000);
-                VBox container = new VBox(label, s1, btnContainer);
-                y.setCenter(container);
                 y.getStylesheets().add("file:stylesheet.css");
                 x.setScene(new Scene(y));
-                x.show();
-
+                
                 cancel.setOnAction(new EventHandler<ActionEvent>() {
                     @Override
                     public void handle(ActionEvent e) {
@@ -251,15 +253,34 @@ public class Technician extends Stage {
                 confirm.setOnAction(new EventHandler<ActionEvent>() {
                     @Override
                     public void handle(ActionEvent e) {
-                        addImgToDatabase(file, patID, apptId);
+                        addReportToDatabase( report, apptId, patID, order, referral);
                         x.close();
                     }
                 });
-            } catch (FileNotFoundException ex) {
-                Logger.getLogger(Technician.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
+                
+                VBox container = new VBox(label, btnContainer);
+                y.setCenter(container);
+                x.show();
     }
+    
+    private void addReportToDatabase(String report,int patID, int apptId, String order, String referral) {
+    	String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
+		 String sql = "INSERT INTO report (apptID, orderID, referralDocId, writtenreport) VALUES (?, ?, ?, ?);";
+		 try {
+		     Connection conn = DriverManager.getConnection(url);
+		     PreparedStatement pstmt = conn.prepareStatement(sql);
+		     pstmt.setInt(1, apptId);
+		     pstmt.setString(2, order);
+		     pstmt.setString(3, referral);
+		     pstmt.setString(4, report);
+		     pstmt.executeUpdate();
+		     pstmt.close();
+		     conn.close();
+		 } catch (SQLException e) {
+		     System.out.println(e.getMessage());
+		 }
+    }
+
 
     private void addImgToDatabase(File file, int patID, int apptId) {
         try {
@@ -283,9 +304,9 @@ public class Technician extends Stage {
             Logger.getLogger(Technician.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
+    
     private void completeOrder(int patID, int apptId) {
-        Stage x = new Stage();
+    	Stage x = new Stage();
         x.initOwner(this);
         x.setMaximized(true);
         x.initModality(Modality.WINDOW_MODAL);
@@ -329,12 +350,12 @@ public class Technician extends Stage {
             public void handle(ActionEvent e) {
                 updateAppointmentStatus(patID, apptId);
                 x.close();
-                techPageOne();
+                radOne();
             }
 
         });
     }
-
+    
     private ArrayList<Image> retrieveUploadedImages(int patID, int apptId) {
         //Connect to database
         ArrayList<Image> list = new ArrayList<Image>();
@@ -364,7 +385,7 @@ public class Technician extends Stage {
         }
         return list;
     }
-
+    
     private void updateAppointmentStatus(int patID, int apptId) {
         String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
         String sql = "UPDATE appointments"
@@ -380,4 +401,18 @@ public class Technician extends Stage {
             System.out.println(e.getMessage());
         }
     }
+    	
+    	
+    
+    
+
 }
+
+
+
+
+
+
+
+
+

@@ -31,18 +31,19 @@ public class App extends Application {
 
     public static void main(String[] args) {
         //Create
-//        createDatabase(fileName);
-//        createUserTable(fileName);
-//        createAppointmentTable(fileName);
-//        createPatientTable(fileName);
-//        createStatusCodesTable(fileName);
-//        createOrderCodesTable(fileName);
-//        createImageTable(fileName);
-//        //Populate
-//        populateTablesReceptionist(fileName);
-//        populateTablesStatus(fileName);
-//        populateTablesTech(fileName);
-//        populateTablesDoc(fileName);
+        createDatabase(fileName);
+        createUserTable(fileName);
+        createAppointmentTable(fileName);
+        createPatientTable(fileName);
+        createStatusCodesTable(fileName);
+        createOrderCodesTable(fileName);
+        createImageTable(fileName);
+        //Populate
+        populateTablesReceptionist(fileName);
+        populateTablesStatus(fileName);
+        populateTablesTech(fileName);
+        populateTablesDoc(fileName);
+    	populateTablesRad(fileName);
 ////        Duplication bug if you run these multiple times, leave commented out
 //        populateAppointments(fileName);
         launch();
@@ -196,6 +197,16 @@ public class App extends Application {
         }
 
     }
+    
+    public static void createRadReportTable(String fileName) {
+    	String url = "jdbc:sqlite:C://sqlite/" + fileName;
+    	String sql = "CREATE TABLE report(\n"
+    			+"apptID INTEGER, \n"
+    			+"orderID INTEGER, \n"
+    			+"referralDocId VARCHAR(64) NOT NULL,\n"
+    			+"writtenreport VARCHAR(max)"
+    			+");";
+    }
 
     //In future, all population statements will be put in here
     public static void executeSQLStatement(String fileName, String sql) {
@@ -220,15 +231,20 @@ public class App extends Application {
         String sql = "INSERT INTO users(email, full_name, username, password, role) VALUES ('techdude@gmail.com', 'dude dude', 'tech', 'tech', '3');\n";
         executeSQLStatement(fileName, sql);
     }
+    
+    public static void populateTablesRad(String fileName) {
+    	String sql = "INSERT INTO users (email, full_name, username, password, role) VALUES('raddude@gmail.com', 'rad dude', 'rad', 'rad', '4');\n";
+    	executeSQLStatement(fileName, sql);
+    }
 
     public static void populateTablesStatus(String fileName) {
-        String sql = "INSERT INTO statusCode VALUES ('0', 'Not Checked In');\n";
-        String sql1 = "INSERT INTO statusCode VALUES ('1', 'Checked In');\n";
-        String sql2 = "INSERT INTO statusCode VALUES ('2', 'Appointment In Progress');\n";
-        String sql3 = "INSERT INTO statusCode VALUES ('3', 'Appointment In Progress - Orders Uploaded');\n";
-        String sql4 = "INSERT INTO statusCode VALUES ('4', 'Appointment Completed');\n";
-        String sql5 = "INSERT INTO statusCode VALUES ('5', 'Appointment Cancelled by Patient');\n";
-        String sql6 = "INSERT INTO statusCode VALUES ('6', 'Appointment Cancelled by Faculty');\n";
+        String sql = "INSERT INTO statusCode VALUES ('0', 'Patient did not show');\n";
+        String sql1 = "INSERT INTO statusCode VALUES ('1', 'appointment scheduled');\n";
+        String sql2 = "INSERT INTO statusCode VALUES ('2', 'checked in');\n";
+        String sql3 = "INSERT INTO statusCode VALUES ('3', 'Patient pulled back for xray');\n";
+        String sql4 = "INSERT INTO statusCode VALUES ('4', 'Patient done with xray');\n";
+        String sql5 = "INSERT INTO statusCode VALUES ('5', 'Patient insurance billed');\n";
+        String sql6 = "INSERT INTO statusCode VALUES ('6', 'Patient sent remaining bill after insurance');\n";
         String sql7 = "INSERT INTO statusCode VALUES ('7', 'Patient Missed Appointment');\n";
 
         executeSQLStatement(fileName, sql);
