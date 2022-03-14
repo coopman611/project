@@ -6,6 +6,7 @@ package aasim.ris;
  */
 import datastorage.User;
 import datastorage.Appointment;
+import datastorage.Patient;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.sql.Connection;
@@ -30,6 +31,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -59,10 +61,8 @@ public class Receptionist extends Stage {
     TableColumn firstNameCol = new TableColumn("Full Name");
     TableColumn timeCol = new TableColumn("Time of Appt.");
     TableColumn orderCol = new TableColumn("Orders Requested");
-//    TableColumn addressCol = new TableColumn("Mailing Address");
-//    TableColumn insuranceCol = new TableColumn("Insurance Provider");
-    TableColumn referralDocCol = new TableColumn("Referral Doctor ID");
     TableColumn status = new TableColumn("Status");
+    TableColumn updateAppt = new TableColumn("Update Appointment");
     //Search Bar
     FilteredList<Appointment> flAppointment;
     ChoiceBox<String> choiceBox = new ChoiceBox();
@@ -71,10 +71,9 @@ public class Receptionist extends Stage {
     //Buttons
     Button addAppointment = new Button("Add Appointment");
     Button refreshTable = new Button("Refresh Appointments");
-    Button updateAppointment = new Button("Update Appointment");
     //Containers
     HBox searchContainer = new HBox(choiceBox, search);
-    HBox buttonContainer = new HBox(addAppointment, refreshTable, updateAppointment, searchContainer);
+    HBox buttonContainer = new HBox(addAppointment, refreshTable, searchContainer);
     VBox tableContainer = new VBox(table, buttonContainer);
 //</editor-fold>
     //Populate the stage
@@ -111,44 +110,29 @@ public class Receptionist extends Stage {
                 populateTable();
             }
         });
-        updateAppointment.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent e) {
-                updateAppointment();
-            }
-        });
 
         //Searchbar Structure
         searchContainer.setAlignment(Pos.TOP_RIGHT);
         HBox.setHgrow(searchContainer, Priority.ALWAYS);
         choiceBox.setPrefHeight(40);
         search.setPrefHeight(40);
-        choiceBox.getItems().addAll("Appointment ID", "Patient ID", "Full Name", "Date/Time", "Address", "Insurance", "Referral Doctor", "Status");
+        choiceBox.getItems().addAll("Appointment ID", "Patient ID", "Full Name", "Date/Time", "Status");
         choiceBox.setValue("Appointment ID");
         search.textProperty().addListener((obs, oldValue, newValue) -> {
             if (choiceBox.getValue().equals("Appointment ID")) {
-                flAppointment.setPredicate(p -> new String(p.getApptId() + "").contains(newValue));//filter table by Full name
+                flAppointment.setPredicate(p -> new String(p.getApptID() + "").contains(newValue));//filter table by Appt ID
             }
             if (choiceBox.getValue().equals("Patient ID")) {
-                flAppointment.setPredicate(p -> new String(p.getPatientID() + "").contains(newValue));//filter table by Full name
+                flAppointment.setPredicate(p -> new String(p.getPatientID() + "").contains(newValue));//filter table by Patient Id
             }
             if (choiceBox.getValue().equals("Full Name")) {
-                flAppointment.setPredicate(p -> p.getFullname().contains(newValue));//filter table by Full name
+                flAppointment.setPredicate(p -> p.getFullName().toLowerCase().contains(newValue.toLowerCase()));//filter table by Full name
             }
             if (choiceBox.getValue().equals("Date/Time")) {
-                flAppointment.setPredicate(p -> p.getTime().contains(newValue));//filter table by Full name
-            }
-//            if (choiceBox.getValue().equals("Address")) {
-//                flAppointment.setPredicate(p -> p.getAddress().contains(newValue));//filter table by Full name
-//            }
-//            if (choiceBox.getValue().equals("Insurance")) {
-//                flAppointment.setPredicate(p -> p.getInsurance().contains(newValue));//filter table by Full name
-//            }
-            if (choiceBox.getValue().equals("Referral Doctor")) {
-                flAppointment.setPredicate(p -> p.getReferral().contains(newValue));//filter table by Full name
+                flAppointment.setPredicate(p -> p.getTime().contains(newValue));//filter table by Date/Time
             }
             if (choiceBox.getValue().equals("Status")) {
-                flAppointment.setPredicate(p -> p.getStatus().contains(newValue));//filter table by Full name
+                flAppointment.setPredicate(p -> p.getStatus().toLowerCase().contains(newValue.toLowerCase()));//filter table by Status
             }
             table.getItems().clear();
             table.getItems().addAll(flAppointment);
@@ -172,27 +156,24 @@ public class Receptionist extends Stage {
         buttonContainer.setPadding(new Insets(10));
         buttonContainer.setSpacing(10);
         //Allow Table to read Appointment class
-        apptIDCol.setCellValueFactory(new PropertyValueFactory<>("apptId"));
+        apptIDCol.setCellValueFactory(new PropertyValueFactory<>("apptID"));
         patientIDCol.setCellValueFactory(new PropertyValueFactory<>("patientID"));
-        firstNameCol.setCellValueFactory(new PropertyValueFactory<>("fullname"));
+        firstNameCol.setCellValueFactory(new PropertyValueFactory<>("fullName"));
         timeCol.setCellValueFactory(new PropertyValueFactory<>("time"));
         orderCol.setCellValueFactory(new PropertyValueFactory<>("order"));
-//        addressCol.setCellValueFactory(new PropertyValueFactory<>("address"));
-//        insuranceCol.setCellValueFactory(new PropertyValueFactory<>("insurance"));
-        referralDocCol.setCellValueFactory(new PropertyValueFactory<>("referral"));
         status.setCellValueFactory(new PropertyValueFactory<>("status"));
+        updateAppt.setCellValueFactory(new PropertyValueFactory<>("placeholder"));
+
         //Set Column Widths
         apptIDCol.prefWidthProperty().bind(table.widthProperty().multiply(0.05));
         patientIDCol.prefWidthProperty().bind(table.widthProperty().multiply(0.04));
         firstNameCol.prefWidthProperty().bind(table.widthProperty().multiply(0.1));
         timeCol.prefWidthProperty().bind(table.widthProperty().multiply(0.1));
         orderCol.prefWidthProperty().bind(table.widthProperty().multiply(0.4));
-//        addressCol.prefWidthProperty().bind(table.widthProperty().multiply(0.3));
-//        insuranceCol.prefWidthProperty().bind(table.widthProperty().multiply(0.1));
-        referralDocCol.prefWidthProperty().bind(table.widthProperty().multiply(0.1));
-        status.prefWidthProperty().bind(table.widthProperty().multiply(0.21));
+        updateAppt.prefWidthProperty().bind(table.widthProperty().multiply(0.1));
+        status.prefWidthProperty().bind(table.widthProperty().multiply(0.2));
         //Add columns to table
-        table.getColumns().addAll(apptIDCol, patientIDCol, firstNameCol, timeCol, orderCol, referralDocCol, status);
+        table.getColumns().addAll(apptIDCol, patientIDCol, firstNameCol, timeCol, orderCol, status, updateAppt);
         table.setStyle("-fx-background-color: #25A18E; -fx-text-fill: WHITE; ");
         main.setCenter(tableContainer);
     }
@@ -203,11 +184,12 @@ public class Receptionist extends Stage {
         table.getItems().clear();
         //Connect to database
         String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
-        String sql = "Select appt_id, patient_id, full_name, time, address, insurance, referral_doc_id, statusCode.status, patient_order"
+        String sql = "Select appt_id, patient_id, patients.full_name, time, statusCode.status"
                 + " FROM appointments"
-                + " INNER JOIN statusCode ON appointments.statusCode = statusCode.statusID"
-                + " WHERE statusCode != 4"
-                + " ORDER BY time DESC;";
+                + " INNER JOIN statusCode ON appointments.statusCode = statusCode.statusID "
+                + " INNER JOIN patients ON patients.patientID = appointments.patient_id"
+                + " WHERE statusCode < 3"
+                + " ORDER BY time ASC;";
 
         try {
             Connection conn = DriverManager.getConnection(url);
@@ -218,8 +200,19 @@ public class Receptionist extends Stage {
 
             while (rs.next()) {
                 //What I receieve:  apptId, patientID, fullname, time, address, insurance, referral, status, order
-                Appointment appt = new Appointment(rs.getInt("appt_id"), rs.getInt("patient_id"), rs.getString("full_name"), rs.getString("time"), rs.getString("address"), rs.getString("insurance"), rs.getString("referral_doc_id"), rs.getString("status"), rs.getString("patient_order"));
+                Appointment appt = new Appointment(rs.getInt("appt_id"), rs.getInt("patient_id"), rs.getString("time"), rs.getString("status"), getPatOrders(rs.getInt("patient_id"), rs.getInt("appt_id")));
+                appt.setFullName(rs.getString("full_name"));
                 list.add(appt);
+            }
+
+            for (Appointment x : list) {
+                x.placeholder.setText("Update Appointment");
+                x.placeholder.setOnAction(new EventHandler<ActionEvent>() {
+                    @Override
+                    public void handle(ActionEvent e) {
+                        updateAppointment(x);
+                    }
+                });
             }
             flAppointment = new FilteredList(FXCollections.observableList(list), p -> true);
             table.getItems().addAll(flAppointment);
@@ -230,6 +223,34 @@ public class Receptionist extends Stage {
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
+    }
+
+    private String getPatOrders(int patientID, int aInt) {
+        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
+        String sql = "Select orderCodes.orders "
+                + " FROM appointmentsOrdersConnector "
+                + " INNER JOIN orderCodes ON appointmentsOrdersConnector.orderCodeID = orderCodes.orderID "
+                + " WHERE apptID = '" + aInt + "';";
+
+        String value = "";
+        try {
+            Connection conn = DriverManager.getConnection(url);
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+            //
+
+            while (rs.next()) {
+
+                value += rs.getString("orders") + ", ";
+            }
+            //
+            rs.close();
+            stmt.close();
+            conn.close();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return value;
     }
 
     //On button press, log out
@@ -252,13 +273,185 @@ public class Receptionist extends Stage {
     }
 
     //On button press, open up a new stage (calls private nested class)
-    private void updateAppointment() {
-        Stage x = new UpdateAppointment();
+    private void updateAppointment(Appointment appt) {
+        Stage x = new Stage();
         x.setTitle("Update Appointment");
         x.initOwner(this);
         x.initModality(Modality.WINDOW_MODAL);
+        //
+        Button updateTime = new Button("Reschedule Appointment");
+        Button updateStatus = new Button("Change Appointment Status");
+        Button updatePatient = new Button("Update Patient Information");
+        HBox display = new HBox(updateTime, updateStatus, updatePatient);
+        display.setAlignment(Pos.CENTER);
+        display.setSpacing(15);
+        //
+
+        //
+        VBox container = new VBox(display);
+        Scene scene = new Scene(container);
+        x.setScene(scene);
+        scene.getStylesheets().add("file:stylesheet.css");
+        //
+        updateTime.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent e) {
+                container.getChildren().clear();
+
+                DatePicker datePicker = new DatePicker();
+                Label text = new Label("Insert Date: ");
+                Label text1 = new Label("Insert Time (HH:MM): ");
+                TextField time = new TextField("HH:MM");
+                text.setPrefWidth(100);
+                text1.setPrefWidth(150);
+                Button submit = new Button("Submit");
+                submit.setPrefWidth(100);
+                submit.setId("complete");
+
+                HBox hidden = new HBox(text, datePicker, text1, time, submit);
+                hidden.setSpacing(15);
+                container.getChildren().add(hidden);
+                submit.setOnAction(new EventHandler<ActionEvent>() {
+                    @Override
+                    public void handle(ActionEvent e) {
+                        boolean everythingCool = true;
+                        //validation here
+                        //end validation
+                        if (everythingCool) {
+                            updateTime(datePicker.getValue().toString() + " " + time.getText(), appt.getApptID());
+                            x.close();
+                        }
+                    }
+
+                });
+            }
+        });
+        updateStatus.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent e) {
+                container.getChildren().clear();
+
+                ComboBox dropdown = new ComboBox();
+                dropdown.getItems().addAll("Patient Did Not Show", "Appointment Scheduled", "Patient Checked In", "Patient recieved by Technician", "Patient Cancelled", "Faculty Cancelled");
+
+                dropdown.setValue(appt.getStatus());
+                Button submit = new Button("Submit");
+                submit.setId("complete");
+
+                HBox hidden = new HBox(dropdown, submit);
+                hidden.setSpacing(15);
+                container.getChildren().add(hidden);
+                submit.setOnAction(new EventHandler<ActionEvent>() {
+                    @Override
+                    public void handle(ActionEvent e) {
+                        boolean everythingCool = true;
+                        //validation here
+                        //end validation
+                        if (everythingCool) {
+                            updateStatus(dropdown.getValue().toString(), appt);
+                            x.close();
+                        }
+                    }
+                });
+            }
+        });
+        updatePatient.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent e) {
+                container.getChildren().clear();
+                Patient pat = pullPatientInfo(appt.getPatientID());
+                Label txtName = new Label("Patient Name: ");
+                Label name = new Label(pat.getFullName());
+
+                Label txtEmail = new Label("Patient Email: ");
+                TextField email = new TextField(pat.getEmail());
+
+                Label txtAddress = new Label("Patient Address: ");
+                TextField address = new TextField(pat.getAddress());
+
+                Label txtInsurance = new Label("Patient Insurance: ");
+                TextField insurance = new TextField(pat.getInsurance());
+
+                Button submit = new Button("Submit");
+                submit.setId("complete");
+
+                HBox hidden = new HBox(txtName, name, txtEmail, email);
+                HBox hidden1 = new HBox(txtAddress, address, txtInsurance, insurance);
+
+                hidden.setSpacing(15);
+                container.getChildren().addAll(hidden, hidden1, submit);
+                container.setSpacing(15);
+                submit.setOnAction(new EventHandler<ActionEvent>() {
+                    @Override
+                    public void handle(ActionEvent e) {
+                        boolean everythingCool = true;
+                        //validation here
+                        //end validation
+                        if (everythingCool) {
+                            updatePatient(new Patient(pat.getPatientID(), email.getText(), pat.getFullName(), pat.getDob(), address.getText(), insurance.getText()));
+                            x.close();
+                        }
+                    }
+
+                });
+            }
+        });
+
         x.showAndWait();
         populateTable();
+    }
+
+    private Patient pullPatientInfo(int patID) {
+        Patient temp = null;
+
+        String sql = "Select * "
+                + " FROM patients"
+                + " WHERE patientID = '" + patID + "';";
+        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
+
+        try {
+            Connection conn = DriverManager.getConnection(url);
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+            //
+            while (rs.next()) {
+                //What I receieve:  patientID, email, full_name, dob, address, insurance
+                temp = new Patient(rs.getInt("patientID"), rs.getString("email"), rs.getString("full_name"), rs.getString("dob"), rs.getString("address"), rs.getString("insurance"));
+            }
+            rs.close();
+            stmt.close();
+            conn.close();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return temp;
+    }
+
+    private void updatePatient(Patient patient) {
+        String sql = "UPDATE patients "
+                + " SET email = '" + patient.getEmail() + "', address = '" + patient.getAddress() + "', insurance = '" + patient.getInsurance() + "' "
+                + " WHERE patientID = '" + patient.getPatientID() + "';";
+        App.executeSQLStatement(App.fileName, sql);
+    }
+
+    private void updateTime(String string, int apptID) {
+        String sql = "UPDATE appointments "
+                + " SET time = '" + string + "' "
+                + " WHERE appt_id = '" + apptID + "';";
+        App.executeSQLStatement(App.fileName, sql);
+    }
+
+    private void updateStatus(String status, Appointment appt) {
+        String sql = "UPDATE appointments "
+                + " SET statusCode = "
+                + "     (SELECT statusID FROM statusCode WHERE status = '" + status + "') "
+                + " WHERE appt_id = '" + appt.getApptID() + "';";
+        App.executeSQLStatement(App.fileName, sql);
+
+        if (status.contains("Cancelled")) {
+            String sql1 = "INSERT INTO  patientOrders VALUES ('" + appt.getPatientID() + "', (SELECT orderCodeID FROM appointmentsOrdersConnector WHERE apptID = '" + appt.getApptID() + "'), '1');";
+            App.executeSQLStatement(App.fileName, sql1);
+        }
     }
 
     /* 
@@ -270,380 +463,176 @@ public class Receptionist extends Stage {
     //Private Nested Class 1
     //For the Add Appointment
     private class AddAppointment extends Stage {
-        //Class Variables, hidden behind an editor-fold
-// <editor-fold>
-//    Labels
 
-        private Label patID = new Label("Patient ID");
-        private Label patName = new Label("Patient's Full Name");
-        private Label patAddress = new Label("Patient's Mailing Address");
-        private Label patDate = new Label("Appointment Date (YYYY-MM-DD HHMM)");
-        private Label patInsurance = new Label("Insurance Provider");
-        private Label patDoc = new Label("Referral Doctor");
-        private Label patOrder = new Label("Orders Requested (Separated by ',')");
+        Patient pat = null;
+        ArrayList<String> orders = new ArrayList<String>();
+        DatePicker datePicker = new DatePicker();
 
-//    Text Boxes
-        private TextField patIDText = new TextField("PatientID");
-        private TextField patNameText = new TextField("PatientsFullName");
-        private TextField patAddressText = new TextField("PatientsMailingAddress");
-        private TextField patDateText = new TextField("YYYY-MM-DD HH:MM");
-        private TextField patInsuranceText = new TextField("Insurance Provider");
-        private TextField patDocText = new TextField("Referral Doctor");
-        private TextField patOrderText = new TextField("Order Requested");
-
-//    Add stuff to HBoxes
-        HBox placeholder1 = new HBox(patID, patIDText, patName, patNameText, patAddress, patAddressText);
-        HBox placeholder2 = new HBox(patDate, patDateText, patInsurance, patInsuranceText);
-        HBox placeholder3 = new HBox(patDoc, patDocText, patOrder, patOrderText);
-
-//    Button
-        Button submit = new Button("Verify and Submit");
-
-//    VBox
-        VBox localmain = new VBox(placeholder1, placeholder2, placeholder3, submit);
-        Scene temp = new Scene(localmain);
-// </editor-fold>
-
-        public AddAppointment() {
-            localmain.setPadding(new Insets(10));
-            localmain.setSpacing(10);
-            patDateText.setPrefWidth(300);
-            patDateText.setMaxWidth(300);
-            placeholder1.setSpacing(10);
-            placeholder2.setSpacing(10);
-            placeholder3.setSpacing(10);
-
-            submit.setOnAction(new EventHandler<ActionEvent>() {
-                @Override
-                public void handle(ActionEvent e) {
-//                In the future, change to verify patient information before adding directly to the database
-                    boolean everythingCool = true;
-                    int id = -1;
-                    try {
-                        id = Integer.parseInt(patIDText.getText());
-                    } catch (NumberFormatException abc) {
-                        everythingCool = false;
-                        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                        alert.setTitle("Improper Patient ID");
-                        alert.setContentText("Please input a valid number for Patient ID.");
-                        alert.showAndWait();
-                    }
-
-                    String name = patNameText.getText();
-                    String address = patAddressText.getText();
-                    String date = patDateText.getText();
-                    String insurance = patInsuranceText.getText();
-                    String doc = patDocText.getText();
-                    String order = patOrderText.getText();
-
-                    if (!patNameText.getText().matches("^[A-Za-z ]*$+")) {
-                        everythingCool = false;
-                        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                        alert.setTitle("Improper Inputs");
-                        alert.setContentText("Please input a proper name.");
-                        alert.showAndWait();
-                    }
-                    if (!patAddressText.getText().matches("^[A-Za-z0-9 ]*$")) {
-                        everythingCool = false;
-                        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                        alert.setTitle("Improper Inputs");
-                        alert.setContentText("Please input a proper address.");
-                        alert.showAndWait();
-                    }
-
-                    if (!patInsuranceText.getText().matches("^[A-Za-z ]*$")) {
-                        everythingCool = false;
-                        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                        alert.setTitle("Improper Inputs");
-                        alert.setContentText("Please input a proper insurance.");
-                        alert.showAndWait();
-                    }
-
-                    if (!patDocText.getText().matches("^[A-Za-z .]*$")) {
-                        everythingCool = false;
-                        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                        alert.setTitle("Improper Inputs");
-                        alert.setContentText("Please input a proper doctor.");
-                        alert.showAndWait();
-                    }
-                    if (!patOrderText.getText().matches("^[A-Za-z0-9 ,]*$")) {
-                        everythingCool = false;
-                        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                        alert.setTitle("Improper Inputs");
-                        alert.setContentText("Please input a proper order.");
-                        alert.showAndWait();
-                    }
-
-                    try {
-                        Timestamp temp = Timestamp.valueOf(patDateText.getText() + ":00");
-                    } catch (IllegalArgumentException axd) {
-                        everythingCool = false;
-                        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                        alert.setTitle("Improper Inputs");
-                        alert.setContentText("Please input a proper date.");
-                        alert.showAndWait();
-                    }
-
-                    int statusCode = 0;
-                    if (everythingCool) {
-                        addAppt(id, name, address, date, insurance, doc, order, statusCode);
-                    }
-                }
-
-            });
-            temp.getStylesheets().add("file:stylesheet.css");
-
-            this.setScene(temp);
-        }
-
-        private void addAppt(int id, String name, String address, String date, String insurance, String doc, String order, int statusCode) {
-            String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
-            String sql = "INSERT INTO appointments(patient_id, full_name, time, address, insurance, referral_doc_id, patient_order, statusCode) VALUES('" + id + "','" + name + "','" + date + "', '" + address + "', '" + insurance + "', '" + doc + "', '" + order + "', '" + statusCode + "');";
-            try {
-                Connection conn = DriverManager.getConnection(url);
-                Statement stmt = conn.createStatement();
-                stmt.execute(sql);
-                stmt.close();
-                conn.close();
-                this.close();
-            } catch (SQLException e) {
-                System.out.println(e.getMessage());
-            }
-        }
-    }
-
-    //Private Nested Class 2
-    //Update appointment
-    private class UpdateAppointment extends Stage {
-//<editor-fold>
         //Class Variables
-//    Labels
+        AddAppointment() {
+            TextField patFullName = new TextField("Full Name");
+            TextField patEmail = new TextField("Email");
+            Button check = new Button("Pull Patient Information");
+            //time && order
+            Label text = new Label("Insert Date: ");
+            Label text1 = new Label("Insert Time (HH:MM): ");
+            TextField time = new TextField("HH:MM");
+            text.setPrefWidth(100);
+            text1.setPrefWidth(150);
 
-        private Label apptID = new Label("Appointment ID");
-        private Label patID = new Label("Patient ID");
-        private Label patName = new Label("Patient's Full Name");
-        private Label patAddress = new Label("Patient's Mailing Address");
-        private Label patDate = new Label("Appointment Date (YYYY-MM-DD HHMM)");
-        private Label patInsurance = new Label("Insurance Provided");
-        private Label patDoc = new Label("Referral Doctor");
-        private Label patOrder = new Label("Orders Requested (Separated by ',')");
-        private Label statusCode = new Label("Status Code: ");
+            Label tutorial = new Label("Click to remove: ");
+            tutorial.setPrefWidth(100);
 
-//    Text Boxes
-        private TextField apptIDText = new TextField("");
-        private TextField patIDText = new TextField("");
-        private TextField patNameText = new TextField("");
-        private TextField patAddressText = new TextField("");
-        private TextField patDateText = new TextField("");
-        private TextField patInsuranceText = new TextField("");
-        private TextField patDocText = new TextField("");
-        private TextField patOrderText = new TextField("");
-        ComboBox statusCodeText = new ComboBox();
+            Button submit = new Button("Submit");
+            submit.setId("complete");
+            //
+            HBox initialContainer = new HBox(patFullName, patEmail, check);
+            initialContainer.setSpacing(10);
+            HBox hiddenContainer = new HBox(text, datePicker, text1, time);
+            hiddenContainer.setSpacing(10);
+            HBox hiddenOrderContainer = new HBox();
+            hiddenOrderContainer.setSpacing(10);
 
-        private TextField statusCodeText1 = new TextField("");
+            HBox hiddenContainer1 = new HBox(submit);
+            hiddenContainer1.setSpacing(10);
+            VBox container = new VBox(initialContainer, hiddenContainer, hiddenOrderContainer, hiddenContainer1);
+            container.setAlignment(Pos.CENTER);
+            initialContainer.setAlignment(Pos.CENTER);
+            hiddenContainer.setAlignment(Pos.CENTER);
+            hiddenOrderContainer.setAlignment(Pos.CENTER);
+            hiddenContainer1.setAlignment(Pos.CENTER);
+            container.setPadding(new Insets(10));
+            initialContainer.setPadding(new Insets(10));
+            hiddenContainer.setPadding(new Insets(10));
+            hiddenOrderContainer.setPadding(new Insets(10));
+            hiddenContainer1.setPadding(new Insets(10));
+            hiddenContainer.setVisible(false);
+            hiddenOrderContainer.setVisible(false);
+            hiddenContainer1.setVisible(false);
+            Scene newScene = new Scene(container);
+            newScene.getStylesheets().add("file:stylesheet.css");
+            this.setScene(newScene);
 
-//    Button
-        Button submit = new Button("Pull Data");
-        Button update = new Button("Update");
+            check.setOnAction(new EventHandler<ActionEvent>() {
+                @Override
+                public void handle(ActionEvent e) {
+                    pat = pullPatientInfo(patFullName.getText(), patEmail.getText());
+                    if (pat != null) {
+                        check.setVisible(false);
+                        Label request = new Label("Orders Requested: ");
+                        request.setPrefWidth(150);
+                        ComboBox dropdown = getPatOrders(pat.getPatientID());
+                        dropdown.setPrefWidth(100);
 
-//    Add stuff to HBoxes
-        HBox placeholder1 = new HBox(apptID, apptIDText, patID, patIDText, submit);
-        HBox placeholder2 = new HBox(patName, patNameText, patAddress, patAddressText);
-        HBox placeholder3 = new HBox(patDate, patDateText, patInsurance, patInsuranceText);
-        HBox placeholder4 = new HBox(patDoc, patDocText, patOrder, patOrderText);
-//    VBox
-        VBox localmain = new VBox(placeholder1);
-        Scene temp = new Scene(localmain);
-//</editor-fold>
+                        hiddenContainer.getChildren().addAll(request, dropdown);
+                        hiddenContainer.setVisible(true);
+                        hiddenOrderContainer.setVisible(true);
+                        hiddenContainer1.setVisible(true);
 
-        public UpdateAppointment() {
-            localmain.setPadding(new Insets(10));
-            localmain.setSpacing(10);
-            patNameText.setPrefWidth(150);
-            patAddressText.setPrefWidth(150);
-            patDateText.setPrefWidth(150);
-            patInsuranceText.setPrefWidth(150);
-            patDocText.setPrefWidth(150);
-            patOrderText.setPrefWidth(150);
-            patNameText.setMaxWidth(150);
-            patAddressText.setMaxWidth(150);
-            patDateText.setMaxWidth(150);
-            patInsuranceText.setMaxWidth(150);
-            patDocText.setMaxWidth(150);
-            patOrderText.setMaxWidth(150);
-            placeholder1.setSpacing(10);
-            placeholder2.setSpacing(10);
-            placeholder3.setSpacing(10);
-            placeholder4.setSpacing(10);
-            statusCodeText.getItems().addAll("Not Checked In", "Checked In", "Appointment In Progress", "Appointment In Progress - Orders Uploaded", "Appointment Completed", "Appointment Cancelled by Patient", "Appointment Cancelled by Faculty", "Patient Missed Appointment");
+                        dropdown.setOnAction(new EventHandler<ActionEvent>() {
+                            @Override
+                            public void handle(ActionEvent t) {
+                                orders.add(dropdown.getValue().toString());
+                                Button temp = new Button(dropdown.getValue().toString());
+                                hiddenOrderContainer.getChildren().add(temp);
+                                temp.setOnAction(new EventHandler<ActionEvent>() {
+                                    @Override
+                                    public void handle(ActionEvent t) {
+                                        if (!dropdown.getValue().toString().isBlank()) {
+                                            orders.remove(temp.getText());
+                                            hiddenOrderContainer.getChildren().remove(temp);
+                                        }
+                                    }
+                                });
+                            }
+                        });
+
+                    }
+                }
+
+            });
+
             submit.setOnAction(new EventHandler<ActionEvent>() {
                 @Override
                 public void handle(ActionEvent e) {
                     boolean everythingCool = true;
-                    int patID = -1, apptID = -1;
-                    try {
-                        apptID = Integer.parseInt(apptIDText.getText());
-                    } catch (NumberFormatException abc) {
-                        everythingCool = false;
-                        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                        alert.setTitle("Improper Appointment ID");
-                        alert.setContentText("Please input a valid number for Patient ID.");
-                        alert.showAndWait();
-                    }
-
-                    try {
-                        patID = Integer.parseInt(patIDText.getText());
-                    } catch (NumberFormatException abc) {
-                        everythingCool = false;
-                        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                        alert.setTitle("Improper Appointment ID");
-                        alert.setContentText("Please input a valid number for Patient ID.");
-                        alert.showAndWait();
-                    }
                     if (everythingCool) {
-                        pullData(apptID, patID);
-                    }
-                }
+                        insertAppointment(pat.getPatientID(), orders, datePicker.getValue().toString() + " " + time.getText());
 
-            });
-            update.setOnAction(new EventHandler<ActionEvent>() {
-                @Override
-                public void handle(ActionEvent e) {
-                    boolean everythingCool = true;
-
-                    if (!patNameText.getText().matches("^[A-Za-z ]*$+")) {
-                        everythingCool = false;
-                        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                        alert.setTitle("Improper Inputs");
-                        alert.setContentText("Please input a proper name.");
-                        alert.showAndWait();
-                    }
-                    if (!patAddressText.getText().matches("^[A-Za-z0-9 ]*$")) {
-                        everythingCool = false;
-                        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                        alert.setTitle("Improper Inputs");
-                        alert.setContentText("Please input a proper address.");
-                        alert.showAndWait();
-                    }
-
-                    if (!patInsuranceText.getText().matches("^[A-Za-z ]*$")) {
-                        everythingCool = false;
-                        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                        alert.setTitle("Improper Inputs");
-                        alert.setContentText("Please input a proper insurance.");
-                        alert.showAndWait();
-                    }
-
-                    if (!patDocText.getText().matches("^[A-Za-z .]*$")) {
-                        everythingCool = false;
-                        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                        alert.setTitle("Improper Inputs");
-                        alert.setContentText("Please input a proper doctor.");
-                        alert.showAndWait();
-                    }
-                    if (!patOrderText.getText().matches("^[A-Za-z0-9 ,]*$")) {
-                        everythingCool = false;
-                        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                        alert.setTitle("Improper Inputs");
-                        alert.setContentText("Please input a proper order.");
-                        alert.showAndWait();
-                    }
-
-                    try {
-                        Timestamp temp = Timestamp.valueOf(patDateText.getText() + ":00");
-                    } catch (IllegalArgumentException axd) {
-                        everythingCool = false;
-                        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                        alert.setTitle("Improper Inputs");
-                        alert.setContentText("Please input a proper date.");
-                        alert.showAndWait();
-                    }
-                    if (everythingCool) {
-                        updateAppt();
                     }
                 }
             });
-            temp.getStylesheets().add("file:stylesheet.css");
-            this.setScene(temp);
+
         }
 
-        private void pullData(int apptID, int patID) {
-            //Connect to database
+        private void insertAppointment(int patientID, ArrayList<String> orders, String time) {
+            String sql = "INSERT INTO appointments(patient_id, time, statusCode)"
+                    + " VALUES ('" + patientID + "', '" + time + "', '1');\n";
+            App.executeSQLStatement(App.fileName, sql);
+            for (String x : orders) {
+                String sql1 = "INSERT INTO appointmentsOrdersConnector(apptID, orderCodeID)"
+                        + " VALUES ("
+                        + " (SELECT appt_id FROM appointments WHERE patient_id = '" + patientID + "' AND time = '" + time + "') , "
+                        + " (SELECT orderID FROM orderCodes WHERE orders = '" + x + "') "
+                        + ");\n";
+
+                App.executeSQLStatement(App.fileName, sql1);
+                String sql2 = "DELETE FROM patientOrders WHERE patientID = '" + patientID + "' AND orderCodeID = (SELECT orderID FROM orderCodes WHERE orders = '" + x + "')";
+                App.executeSQLStatement(App.fileName, sql2);
+            }
+            this.close();
+        }
+
+        private ComboBox getPatOrders(int patientID) {
             String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
-            String sql = "Select appt_id, patient_id, full_name, time, address, insurance, referral_doc_id, statusCode.status, patient_order"
-                    + " FROM appointments"
-                    + " INNER JOIN statusCode ON appointments.statusCode = statusCode.statusID"
-                    + " WHERE appt_id = '" + apptID + "' AND patient_id = '" + patID + "';";
-            boolean everythingCool2ElectricBoogaloo = false;
+            String sql = "Select orderCodes.orders "
+                    + " FROM patientOrders "
+                    + " INNER JOIN orderCodes ON patientOrders.orderCodeID = orderCodes.orderID "
+                    + " WHERE patientID = '" + patientID + "';";
+            ComboBox value = new ComboBox();
             try {
-                Appointment appt = null;
                 Connection conn = DriverManager.getConnection(url);
                 Statement stmt = conn.createStatement();
                 ResultSet rs = stmt.executeQuery(sql);
                 //
 
                 while (rs.next()) {
-                    //What I receieve:  apptId, patientID, fullname, time, address, insurance, referral, status, order
-                    everythingCool2ElectricBoogaloo = true;
-                    appt = new Appointment(rs.getInt("appt_id"), rs.getInt("patient_id"), rs.getString("full_name"), rs.getString("time"), rs.getString("address"), rs.getString("insurance"), rs.getString("referral_doc_id"), rs.getString("status"), rs.getString("patient_order"));
+                    value.getItems().add(rs.getString("orders"));
                 }
                 //
                 rs.close();
                 stmt.close();
                 conn.close();
-                if (everythingCool2ElectricBoogaloo) {
-                    apptIDText.setEditable(false);
-                    patIDText.setEditable(false);
-                    placeholder1.getChildren().remove(submit);
-                    placeholder1.getChildren().addAll(statusCode, statusCodeText);
-                    patNameText.setText(appt.getFullname());
-                    patAddressText.setText(appt.getAddress());
-                    patDateText.setText(appt.getTime());
-                    statusCodeText.setValue(appt.getStatus());
-                    patInsuranceText.setText(appt.getInsurance());
-                    patDocText.setText(appt.getReferral());
-                    patOrderText.setText(appt.getOrder());
-                    localmain.getChildren().addAll(placeholder2, placeholder3, placeholder4, update);
-                    this.setHeight(300);
-                    this.setWidth(1000);
-                }
             } catch (SQLException e) {
                 System.out.println(e.getMessage());
             }
+            return value;
         }
 
-        private void updateAppt() {
+        private Patient pullPatientInfo(String patFullName, String patEmail) {
+            Patient temp = null;
+
+            String sql = "Select * "
+                    + " FROM patients"
+                    + " WHERE email = '" + patEmail + "' AND full_name = '" + patFullName + "';";
             String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
-            int statusID = -1;
-            if (statusCodeText.getValue().equals("Not Checked In")) {
-                statusID = 0;
-            } else if (statusCodeText.getValue().equals("Checked In")) {
-                statusID = 1;
-            } else if (statusCodeText.getValue().equals("Appointment In Progress")) {
-                statusID = 2;
-            } else if (statusCodeText.getValue().equals("Appointment In Progress - Orders Uploaded")) {
-                statusID = 3;
-            } else if (statusCodeText.getValue().equals("Appointment Completed")) {
-                statusID = 4;
-            } else if (statusCodeText.getValue().equals("Appointment Cancelled by Patient")) {
-                statusID = 5;
-            } else if (statusCodeText.getValue().equals("Appointment Cancelled by Faculty")) {
-                statusID = 6;
-            } else if (statusCodeText.getValue().equals("Patient Missed Appointment")) {
-                statusID = 7;
-            }
-            String sql = "UPDATE appointments SET full_name = '" + patNameText.getText() + "', time = '" + patDateText.getText() + "', address = '" + patAddressText.getText() + "', insurance = '" + patInsuranceText.getText() + "', referral_doc_id = '" + patDocText.getText() + "', statusCode = '" + statusID + "', patient_order = '" + patOrderText.getText() + "' WHERE appt_id = '" + apptIDText.getText() + "' AND patient_id = '" + patIDText.getText() + "';";
+
             try {
                 Connection conn = DriverManager.getConnection(url);
                 Statement stmt = conn.createStatement();
-                stmt.execute(sql);
+                ResultSet rs = stmt.executeQuery(sql);
+                //
+                while (rs.next()) {
+                    //What I receieve:  patientID, email, full_name, dob, address, insurance
+                    temp = new Patient(rs.getInt("patientID"), rs.getString("email"), rs.getString("full_name"), rs.getString("dob"), rs.getString("address"), rs.getString("insurance"));
+                }
+                rs.close();
                 stmt.close();
                 conn.close();
-                this.close();
             } catch (SQLException e) {
                 System.out.println(e.getMessage());
             }
+            return temp;
         }
     }
-
 }

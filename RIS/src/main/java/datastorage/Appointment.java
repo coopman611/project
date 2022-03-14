@@ -13,55 +13,30 @@ import javafx.scene.control.Button;
  */
 public class Appointment {
 
-    int apptId, patientID;
-    String fullname, time, address, insurance, referral, status, order;
-    InputStream fulOrder;
-    public Button updateAppt = new Button("Update Order");
+    int apptID, patientID;
+    String time, status, order;
 
-    public Button getUpdateAppt() {
-        return updateAppt;
-    }
+    String fullName;
+    public Button placeholder = new Button("Placeholder");
 
-    public Appointment() {
-    }
-
-    public Appointment(int apptId, int patientID, String fullname, String time, String address, String insurance, String referral, String status, String order) {
-        this.apptId = apptId;
+    public Appointment(int apptID, int patientID, String time, String status, String order) {
+        this.apptID = apptID;
         this.patientID = patientID;
-        this.fullname = fullname;
-        this.time = time;
-        this.address = address;
-        this.insurance = insurance;
-        this.referral = referral;
-        this.status = status;
-        this.order = order;
-    }
-
-    public Appointment(int apptId, int patientID, String fullname, String time, String status, String order, InputStream fulfilledOrder) {
-        this.apptId = apptId;
-        this.patientID = patientID;
-        this.fullname = fullname;
         this.time = time;
         this.status = status;
         this.order = order;
-        this.fulOrder = fulfilledOrder;
-
     }
 
-    public InputStream getfulOrder() {
-        return fulOrder;
+    public Button getPlaceholder() {
+        return placeholder;
     }
 
-    public void setfulOrder() {
-        this.fulOrder = fulOrder;
+    public int getApptID() {
+        return apptID;
     }
 
-    public int getApptId() {
-        return apptId;
-    }
-
-    public void setApptId(int apptId) {
-        this.apptId = apptId;
+    public void setApptID(int apptID) {
+        this.apptID = apptID;
     }
 
     public int getPatientID() {
@@ -72,44 +47,12 @@ public class Appointment {
         this.patientID = patientID;
     }
 
-    public String getFullname() {
-        return fullname;
-    }
-
-    public void setFullname(String fullname) {
-        this.fullname = fullname;
-    }
-
     public String getTime() {
         return time;
     }
 
     public void setTime(String time) {
         this.time = time;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
-    public String getInsurance() {
-        return insurance;
-    }
-
-    public void setInsurance(String insurance) {
-        this.insurance = insurance;
-    }
-
-    public String getReferral() {
-        return referral;
-    }
-
-    public void setReferral(String referral) {
-        this.referral = referral;
     }
 
     public String getStatus() {
@@ -126,6 +69,14 @@ public class Appointment {
 
     public void setOrder(String order) {
         this.order = order;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
     }
 
 }

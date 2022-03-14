@@ -4,7 +4,7 @@
  */
 package datastorage;
 
-import java.util.logging.Logger;
+import javafx.scene.control.Button;
 
 /**
  *
@@ -13,22 +13,19 @@ import java.util.logging.Logger;
 public class Patient {
 
     int patientID;
-    String fullName;
-    String address;
-    String insurance;
-    String orderIDs;
-    String referralDocs;
-
-    public Patient(int patientID, String fullName, String address, String insurance, String orderIDs, String referralDocs) {
-        this.patientID = patientID;
-        this.fullName = fullName;
-        this.address = address;
-        this.insurance = insurance;
-        this.orderIDs = orderIDs;
-        this.referralDocs = referralDocs;
-    }
+    String email, fullName, dob, address, insurance;
+    public Button placeholder = new Button("Placeholder");
 
     public Patient() {
+    }
+
+    public Patient(int patientID, String email, String fullName, String dob, String address, String insurance) {
+        this.patientID = patientID;
+        this.email = email;
+        this.fullName = fullName;
+        this.dob = dob;
+        this.address = address;
+        this.insurance = insurance;
     }
 
     public int getPatientID() {
@@ -39,12 +36,28 @@ public class Patient {
         this.patientID = patientID;
     }
 
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
     public String getFullName() {
         return fullName;
     }
 
     public void setFullName(String fullName) {
         this.fullName = fullName;
+    }
+
+    public String getDob() {
+        return dob;
+    }
+
+    public void setDob(String dob) {
+        this.dob = dob;
     }
 
     public String getAddress() {
@@ -59,23 +72,11 @@ public class Patient {
         return insurance;
     }
 
+    public Button getPlaceholder() {
+        return placeholder;
+    }
+
     public void setInsurance(String insurance) {
         this.insurance = insurance;
-    }
-
-    public String getOrderIDs() {
-        return orderIDs;
-    }
-
-    public void setOrderIDs(String orderIDs) {
-        this.orderIDs = orderIDs;
-    }
-
-    public String getReferralDocs() {
-        return referralDocs;
-    }
-
-    public void setReferralDocs(String referralDocs) {
-        this.referralDocs = referralDocs;
     }
 }

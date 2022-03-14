@@ -61,6 +61,8 @@ public class Login extends Stage {
             }
 
         });
+        inputUsername.setId("textfield");
+        inputPassword.setId("textfield");
         center.setId("loginpage");
         center.setSpacing(10);
         try {
