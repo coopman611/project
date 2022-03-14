@@ -44,3 +44,7 @@
 #complete:hover{
     -fx-background-color: #A9FDAC;
 }
+
+#textfield{
+    -fx-background-radius: 30;
+}

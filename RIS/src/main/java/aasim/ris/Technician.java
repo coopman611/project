@@ -57,7 +57,7 @@ public class Technician extends Stage {
     //End Scene
     private FilteredList flAppointment;
     private final FileChooser fileChooser = new FileChooser();
-
+    
     public Technician() {
         this.setTitle("RIS - Radiology Information System (Technician)");
         //Navbar
@@ -83,7 +83,7 @@ public class Technician extends Stage {
         scene.getStylesheets().add("file:stylesheet.css");
         this.setScene(scene);
     }
-
+    
     private void createTableAppointments() {
         //All of the Columns
         TableColumn patientIDCol = new TableColumn("Patient ID");
@@ -95,11 +95,11 @@ public class Technician extends Stage {
 
         //And all of the Value setting
         patientIDCol.setCellValueFactory(new PropertyValueFactory<>("patientID"));
-        fullNameCol.setCellValueFactory(new PropertyValueFactory<>("fullname"));
+        fullNameCol.setCellValueFactory(new PropertyValueFactory<>("fullName"));
         timeCol.setCellValueFactory(new PropertyValueFactory<>("time"));
         orderIDCol.setCellValueFactory(new PropertyValueFactory<>("order"));
         statusCol.setCellValueFactory(new PropertyValueFactory<>("status"));
-        updateStatusCol.setCellValueFactory(new PropertyValueFactory<>("updateAppt"));
+        updateStatusCol.setCellValueFactory(new PropertyValueFactory<>("placeholder"));
 
         //Couldn't put all the styling
         patientIDCol.prefWidthProperty().bind(appointmentsTable.widthProperty().multiply(0.04));
@@ -111,34 +111,37 @@ public class Technician extends Stage {
         appointmentsTable.getColumns().addAll(patientIDCol, fullNameCol, timeCol, orderIDCol, statusCol, updateStatusCol);
         //Add Status Update Column:
     }
-
+    
     private void populateTable() {
         appointmentsTable.getItems().clear();
         //Connect to database
         String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
-        String sql = "Select appt_id, patient_id, full_name, time, address, insurance, referral_doc_id, statusCode.status, patient_order"
+        String sql = "Select appt_id, patient_id, patients.full_name, time, statusCode.status"
                 + " FROM appointments"
                 + " INNER JOIN statusCode ON appointments.statusCode = statusCode.statusID"
-                + " WHERE statusCode != 4"
-                + " ORDER BY time DESC;";
-
+                + " INNER JOIN patients ON appointments.patient_id = patients.patientID"
+                + " WHERE statusCode < 4"
+                + " ORDER BY time ASC;";
+        
         try {
             Connection conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             //
             List<Appointment> list = new ArrayList<Appointment>();
-
+            
             while (rs.next()) {
                 //What I receieve:  apptId, patientID, fullname, time, address, insurance, referral, status, order
-                Appointment appt = new Appointment(rs.getInt("appt_id"), rs.getInt("patient_id"), rs.getString("full_name"), rs.getString("time"), rs.getString("address"), rs.getString("insurance"), rs.getString("referral_doc_id"), rs.getString("status"), rs.getString("patient_order"));
+                Appointment appt = new Appointment(rs.getInt("appt_id"), rs.getInt("patient_id"), rs.getString("time"), rs.getString("status"), getPatOrders(rs.getInt("patient_id"), rs.getInt("appt_id")));
+                appt.setFullName(rs.getString("full_name"));
                 list.add(appt);
             }
             for (Appointment z : list) {
-                z.updateAppt.setOnAction(new EventHandler<ActionEvent>() {
+                z.placeholder.setText("Check In");
+                z.placeholder.setOnAction(new EventHandler<ActionEvent>() {
                     @Override
                     public void handle(ActionEvent e) {
-                        techPageTwo(z.getPatientID(), z.getApptId(), z.getFullname(), z.getOrder(), z.getReferral(), z.getStatus());
+                        techPageTwo(z.getPatientID(), z.getApptID(), z.getFullName(), z.getOrder());
                     }
                 });
             }
@@ -152,7 +155,35 @@ public class Technician extends Stage {
             System.out.println(e.getMessage());
         }
     }
+    
+    private String getPatOrders(int patientID, int aInt) {
+        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
+        String sql = "Select orderCodes.orders "
+                + " FROM appointmentsOrdersConnector "
+                + " INNER JOIN orderCodes ON appointmentsOrdersConnector.orderCodeID = orderCodes.orderID "
+                + " WHERE apptID = '" + aInt + "';";
+        
+        String value = "";
+        try {
+            Connection conn = DriverManager.getConnection(url);
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+            //
 
+            while (rs.next()) {
+                
+                value += rs.getString("orders") + ", ";
+            }
+            //
+            rs.close();
+            stmt.close();
+            conn.close();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return value;
+    }
+    
     private void logOut() {
         App.user = new User();
         Stage x = new Login();
@@ -160,13 +191,13 @@ public class Technician extends Stage {
         x.setMaximized(true);
         this.close();
     }
-
+    
     private void techPageOne() {
         populateTable();
         main.setCenter(tableContainer);
     }
-
-    private void techPageTwo(int patID, int apptId, String fullname, String order, String referral, String status) {
+    
+    private void techPageTwo(int patID, int apptId, String fullname, String order) {
         VBox container = new VBox();
         container.setSpacing(10);
         container.setAlignment(Pos.CENTER);
@@ -198,24 +229,24 @@ public class Technician extends Stage {
                 main.setCenter(tableContainer);
             }
         });
-
+        
         addImg.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent t) {
                 openFile(patID, apptId);
-
+                
             }
         });
-
+        
         complete.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent t) {
                 completeOrder(patID, apptId);
             }
         });
-
+        
     }
-
+    
     private void openFile(int patID, int apptId) {
         File file = fileChooser.showOpenDialog(this);
         if (file != null) {
@@ -229,7 +260,7 @@ public class Technician extends Stage {
                 Label label = new Label("You are uploading the image: " + file.getName());
                 Button confirm = new Button("Confirm");
                 confirm.setId("complete");
-
+                
                 Button cancel = new Button("Cancel");
                 cancel.setId("cancel");
                 HBox btnContainer = new HBox(cancel, confirm);
@@ -241,7 +272,7 @@ public class Technician extends Stage {
                 y.getStylesheets().add("file:stylesheet.css");
                 x.setScene(new Scene(y));
                 x.show();
-
+                
                 cancel.setOnAction(new EventHandler<ActionEvent>() {
                     @Override
                     public void handle(ActionEvent e) {
@@ -260,11 +291,11 @@ public class Technician extends Stage {
             }
         }
     }
-
+    
     private void addImgToDatabase(File file, int patID, int apptId) {
         try {
             FileInputStream temp = new FileInputStream(file);
-
+            
             String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
             String sql = "INSERT INTO images (patientID, apptID, image) VALUES (?, ?, ?);";
             try {
@@ -283,7 +314,7 @@ public class Technician extends Stage {
             Logger.getLogger(Technician.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
+    
     private void completeOrder(int patID, int apptId) {
         Stage x = new Stage();
         x.initOwner(this);
@@ -316,14 +347,14 @@ public class Technician extends Stage {
         y.getStylesheets().add("file:stylesheet.css");
         x.setScene(new Scene(y));
         x.show();
-
+        
         cancel.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent e) {
                 x.close();
             }
         });
-
+        
         confirm.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent e) {
@@ -331,20 +362,20 @@ public class Technician extends Stage {
                 x.close();
                 techPageOne();
             }
-
+            
         });
     }
-
+    
     private ArrayList<Image> retrieveUploadedImages(int patID, int apptId) {
         //Connect to database
         ArrayList<Image> list = new ArrayList<Image>();
-
+        
         String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
         String sql = "SELECT *"
                 + " FROM images"
                 + " WHERE patientID = '" + patID + "' AND apptID = '" + apptId + "'"
                 + " ORDER BY imageID DESC;";
-
+        
         try {
             Connection conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
@@ -364,7 +395,7 @@ public class Technician extends Stage {
         }
         return list;
     }
-
+    
     private void updateAppointmentStatus(int patID, int apptId) {
         String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
         String sql = "UPDATE appointments"
