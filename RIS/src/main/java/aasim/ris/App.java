@@ -31,22 +31,22 @@ public class App extends Application {
 
     public static void main(String[] args) {
         //Create
-        createDatabase(fileName);
-        createUserTable(fileName);
-        createAppointmentTable(fileName);
-        createPatientTable(fileName);
-        createStatusCodesTable(fileName);
-        createOrderCodesTable(fileName);
-        createOrdersTable(fileName);
-        createImageTable(fileName);
-        createDocPatientConnectorTable(fileName);
-        createRadReportTable(fileName);
-        //Populate
-        populateTablesReceptionist(fileName);
-        populateTablesStatus(fileName);
-        populateTablesTech(fileName);
-        populateTablesDoc(fileName);
-        populateTablesRad(fileName);
+//        createDatabase(fileName);
+//        createUserTable(fileName);
+//        createAppointmentTable(fileName);
+//        createPatientTable(fileName);
+//        createStatusCodesTable(fileName);
+//        createOrderCodesTable(fileName);
+//        createOrdersTable(fileName);
+//        createImageTable(fileName);
+//        createDocPatientConnectorTable(fileName);
+//        createRadReportTable(fileName);
+//        //Populate
+//        populateTablesReceptionist(fileName);
+//        populateTablesStatus(fileName);
+//        populateTablesTech(fileName);
+//        populateTablesDoc(fileName);
+//        populateTablesRad(fileName);
 //////        Duplication bug if you run these multiple times, leave commented out
         launch();
     }
@@ -70,7 +70,6 @@ public class App extends Application {
     //Functionality only does Users as of now.
     //In future, all tables to be created will be put in here
     public static void createUserTable(String fileName) {
-        String url = "jdbc:sqlite:C://sqlite/" + fileName;
         String sql = "CREATE TABLE users (\n"
                 + "	user_id INTEGER PRIMARY KEY ,\n"
                 + "	email VARCHAR(45) UNIQUE NOT NULL,\n"
@@ -80,15 +79,31 @@ public class App extends Application {
                 + "     role TINYINT NOT NULL DEFAULT 0,\n"
                 + "	enabled BIT NOT NULL DEFAULT 1\n"
                 + ");";
-        try {
-            Connection conn = DriverManager.getConnection(url);
-            Statement stmt = conn.createStatement();
-            stmt.execute(sql);
-            stmt.close();
-            conn.close();
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
+        executeSQLStatement(fileName, sql);
+        sql = "CREATE TABLE roles (\n"
+                + "	roleID INTEGER PRIMARY KEY ,\n"
+                + "     role VARCHAR(25),\n"
+                + "	UNIQUE(roleID, role) \n"
+                + ");";
+        executeSQLStatement(fileName, sql);
+        
+        sql = "INSERT INTO roles VALUES ('1', 'Administrator');\n";
+        executeSQLStatement(fileName, sql);
+
+        sql = "INSERT INTO roles VALUES ('2', 'Receptionist');\n";
+        executeSQLStatement(fileName, sql);
+
+        sql = "INSERT INTO roles VALUES ('3', 'Technician');\n";
+        executeSQLStatement(fileName, sql);
+
+        sql = "INSERT INTO roles VALUES ('4', 'Radiologist');\n";
+        executeSQLStatement(fileName, sql);
+
+        sql = "INSERT INTO roles VALUES ('5', 'Referral Doctor');\n";
+        executeSQLStatement(fileName, sql);
+
+        sql = "INSERT INTO roles VALUES ('6', 'Biller');\n";
+        executeSQLStatement(fileName, sql);
 
     }
 
@@ -204,7 +219,6 @@ public class App extends Application {
 
     }
 
-
     public static void createImageTable(String fileName) {
         String url = "jdbc:sqlite:C://sqlite/" + fileName;
         String sql = "CREATE TABLE images (\n"
@@ -248,8 +262,6 @@ public class App extends Application {
             System.out.println(e.getMessage());
         }
     }
-    
-
 
     public static void populateTablesReceptionist(String fileName) {
         String sql = "INSERT INTO users(email, full_name, username, password, role) VALUES ('exampleemail@gmail.com', 'Sadie Greenhorn', 'receptionist', 'receptionist', '2');\n";
@@ -264,6 +276,8 @@ public class App extends Application {
     public static void populateTablesRad(String fileName) {
         String sql = "INSERT INTO users (email, full_name, username, password, role) VALUES('raddude@gmail.com', 'rad dude', 'rad', 'rad', '4');\n";
         executeSQLStatement(fileName, sql);
+        String sql1 = "INSERT INTO users (email, full_name, username, password, role) VALUES('bill@gmail.com', 'billy builder', 'bill', 'bill', '6');\n";
+        executeSQLStatement(fileName, sql1);
     }
 
     public static void populateTablesStatus(String fileName) {
@@ -292,6 +306,9 @@ public class App extends Application {
     public static void populateTablesDoc(String fileName) {
         String sql = "INSERT INTO users(email, full_name, username, password, role) VALUES ('notanorangutan@gmail.com', 'Orangutan Dave', 'doc', 'doc', '5');\n";
         executeSQLStatement(fileName, sql);
+        sql = "INSERT INTO users(email, full_name, username, password, role) VALUES ('god@gmail.com', 'Administrator Dave', 'admin', 'admin', '1');\n";
+        executeSQLStatement(fileName, sql);
+
     }
 
     //get rid of this

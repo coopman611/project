@@ -41,8 +41,11 @@ import javafx.util.Callback;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
+import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
@@ -50,6 +53,8 @@ public class Rad extends Stage {
     //navbar
 
     HBox navbar = new HBox();
+    Label username = new Label("Logged In as: " + App.user.getFullName());
+
     Button logOut = new Button("Log Out");
 
     //end navbar
@@ -62,9 +67,13 @@ public class Rad extends Stage {
     Scene scene = new Scene(main);
 
     //end scene
-    private FilteredList flAppointment;
+    private FilteredList<Appointment> flAppointment;
+    ChoiceBox<String> choiceBox = new ChoiceBox();
+    TextField search = new TextField("Search Appointments");
+    HBox searchContainer = new HBox(choiceBox, search);
+
     private final FileChooser fileChooser = new FileChooser();
-    
+
     public Rad() {
         this.setTitle("RIS - Radiology Information System (Radiologist)");
         //navbar
@@ -76,7 +85,9 @@ public class Rad extends Stage {
                 logOut();
             }
         });
-        navbar.getChildren().add(logOut);
+        username.setId("navbar");
+        username.setOnMouseClicked(eh -> userInfo());
+        navbar.getChildren().addAll(username, logOut);
         navbar.setStyle("-fx-background-color: #2f4f4f; -fx-spacing: 15;");
         main.setTop(navbar);
         //end navbar
@@ -86,18 +97,43 @@ public class Rad extends Stage {
         createTableAppointments();
         populateTable();
         //end center
+
+        //Searchbar Structure
+        tableContainer.getChildren().add(searchContainer);
+        searchContainer.setAlignment(Pos.TOP_RIGHT);
+        HBox.setHgrow(searchContainer, Priority.ALWAYS);
+        choiceBox.setPrefHeight(40);
+        search.setPrefHeight(40);
+        choiceBox.getItems().addAll("Patient ID", "Full Name", "Date/Time", "Order", "Status");
+        choiceBox.setValue("Patient ID");
+        search.textProperty().addListener((obs, oldValue, newValue) -> {
+            if (choiceBox.getValue().equals("Patient ID")) {
+                flAppointment.setPredicate(p -> new String(p.getPatientID() + "").contains(newValue));//filter table by Patient Id
+            } else if (choiceBox.getValue().equals("Full Name")) {
+                flAppointment.setPredicate(p -> p.getFullName().toLowerCase().contains(newValue.toLowerCase()));//filter table by Full name
+            } else if (choiceBox.getValue().equals("Date/Time")) {
+                flAppointment.setPredicate(p -> p.getTime().contains(newValue));//filter table by Date/Time
+            } else if (choiceBox.getValue().equals("Order")) {
+                flAppointment.setPredicate(p -> p.getOrder().toLowerCase().contains(newValue.toLowerCase()));//filter table by Date/Time
+            } else if (choiceBox.getValue().equals("Status")) {
+                flAppointment.setPredicate(p -> p.getStatus().toLowerCase().contains(newValue.toLowerCase()));//filter table by Status
+            }
+            appointmentsTable.getItems().clear();
+            appointmentsTable.getItems().addAll(flAppointment);
+        });
+
         //set scene and structure
         scene.getStylesheets().add("file:stylesheet.css");
         this.setScene(scene);
     }
-    
+
     private void createTableAppointments() {
         //columns of table
         TableColumn patientIDCol = new TableColumn("Patient ID");
         TableColumn fullNameCol = new TableColumn("Full Name");
         TableColumn timeCol = new TableColumn("Time");
         TableColumn orderIDCol = new TableColumn("Orders Requested");
-        TableColumn statusCol = new TableColumn("Appoointment Status");
+        TableColumn statusCol = new TableColumn("Appointment Status");
         TableColumn reportCol = new TableColumn("Radiologist Report");
 
         //all of the value settings
@@ -119,7 +155,7 @@ public class Rad extends Stage {
         appointmentsTable.getColumns().addAll(patientIDCol, fullNameCol, timeCol, orderIDCol, statusCol, reportCol);
         //Add Status Update Column:
     }
-    
+
     private void populateTable() {
         appointmentsTable.getItems().clear();
         //connects to database
@@ -136,7 +172,7 @@ public class Rad extends Stage {
             ResultSet rs = stmt.executeQuery(sql);
             //
             List<Appointment> list = new ArrayList<Appointment>();
-            
+
             while (rs.next()) {
                 //What I receieve:  apptId, patientID, fullname, time, address, insurance, referral, status, order
                 Appointment appt = new Appointment(rs.getInt("appt_id"), rs.getInt("patient_id"), rs.getString("time"), rs.getString("status"), getPatOrders(rs.getInt("patient_id"), rs.getInt("appt_id")));
@@ -162,14 +198,14 @@ public class Rad extends Stage {
             System.out.println(e.getMessage());
         }
     }
-    
+
     private String getPatOrders(int patientID, int aInt) {
         String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
         String sql = "Select orderCodes.orders "
                 + " FROM appointmentsOrdersConnector "
                 + " INNER JOIN orderCodes ON appointmentsOrdersConnector.orderCodeID = orderCodes.orderID "
                 + " WHERE apptID = '" + aInt + "';";
-        
+
         String value = "";
         try {
             Connection conn = DriverManager.getConnection(url);
@@ -178,7 +214,7 @@ public class Rad extends Stage {
             //
 
             while (rs.next()) {
-                
+
                 value += rs.getString("orders") + ", ";
             }
             //
@@ -190,7 +226,7 @@ public class Rad extends Stage {
         }
         return value;
     }
-    
+
     private void logOut() {
         App.user = new User();
         Stage x = new Login();
@@ -198,12 +234,19 @@ public class Rad extends Stage {
         x.setMaximized(true);
         this.close();
     }
-    
+
+    private void userInfo() {
+        Stage x = new UserInfo();
+        x.show();
+        x.setMaximized(true);
+        this.close();
+    }
+
     private void radOne() {
         populateTable();
         main.setCenter(tableContainer);
     }
-    
+
     private void radPageTwo(int patID, int apptId, String fullname, String order, String report) {
         VBox container = new VBox();
         container.setSpacing(10);
@@ -236,27 +279,26 @@ public class Rad extends Stage {
                 main.setCenter(tableContainer);
             }
         });
-        
+
         addReport.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent t) {
                 openFile(report, patID, apptId, order);
-                //completeOrder(patID, apptId);
-                
+
             }
         });
-        
+
         complete.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent t) {
                 completeOrder(patID, apptId);
             }
         });
-        
+
     }
-    
+
     private void openFile(String report, int patID, int apptId, String order) {
-        
+
         Stage x = new Stage();
         x.initOwner(this);
         x.initModality(Modality.WINDOW_MODAL);
@@ -265,10 +307,9 @@ public class Rad extends Stage {
         Label label = new Label("Report");
         Button confirm = new Button("Confirm");
         confirm.setId("complete");
-        
-       // Button viewImg = new Button("View Image");
+        // Button viewImg = new Button("View Image");
         //viewImg.setId("View Image");
-        
+
         VBox imgContainer = new VBox();
         ArrayList<Image> list = retrieveUploadedImages(patID, apptId);
         if (list.isEmpty()) {
@@ -281,48 +322,37 @@ public class Rad extends Stage {
         }
         ScrollPane s1 = new ScrollPane();
         s1.setContent(imgContainer);
-        
-        
+
         TextArea reportText = new TextArea();
         reportText.getText();
-        
+
         Button cancel = new Button("Cancel");
         cancel.setId("cancel");
         HBox btnContainer = new HBox(cancel, reportText, confirm, s1);
         btnContainer.setSpacing(25);
         y.getStylesheets().add("file:stylesheet.css");
         x.setScene(new Scene(y));
-        
+
         cancel.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent e) {
                 x.close();
             }
         });
-       /* 
-        viewImg.setOnAction(new EventHandler<ActionEvent>() {
-        	@Override
-        	public void handle(ActionEvent e) {
-        		completeOrder(patID, apptId);
-        	}
-        });
-        */
         confirm.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent e) {
                 addReportToDatabase(report, apptId, patID, order);
+                updateAppointmentStatus(patID, apptId);
                 x.close();
             }
         });
-        
+
         VBox container = new VBox(label, btnContainer);
         y.setCenter(container);
         x.show();
-        
-        
-        
     }
-    
+
     private void addReportToDatabase(String report, int patID, int apptId, String order) {
         String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
         String sql = "INSERT INTO report (apptID, orderID, referralDocId, writtenreport) VALUES (?, ?, ?);";
@@ -339,14 +369,14 @@ public class Rad extends Stage {
             System.out.println(e.getMessage());
         }
     }
-    
+
     private void completeOrder(int patID, int apptId) {
         Stage x = new Stage();
         x.initOwner(this);
         x.setMaximized(true);
         x.initModality(Modality.WINDOW_MODAL);
         BorderPane y = new BorderPane();
-        Label label = new Label("Order images:");
+        Label label = new Label("Images: ");
         //Images
         VBox imgContainer = new VBox();
         ArrayList<Image> list = retrieveUploadedImages(patID, apptId);
@@ -371,34 +401,26 @@ public class Rad extends Stage {
         y.getStylesheets().add("file:stylesheet.css");
         x.setScene(new Scene(y));
         x.show();
-        
+
         cancel.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent e) {
                 x.close();
             }
         });
-        
-		/*
-		 * confirm.setOnAction(new EventHandler<ActionEvent>() {
-		 * 
-		 * @Override public void handle(ActionEvent e) { updateAppointmentStatus(patID,
-		 * apptId); x.close(); radOne(); }
-		 * 
-		 * });
-		 */
+
     }
-    
+
     private ArrayList<Image> retrieveUploadedImages(int patID, int apptId) {
         //Connect to database
         ArrayList<Image> list = new ArrayList<Image>();
-        
+
         String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
         String sql = "SELECT *"
                 + " FROM images"
                 + " WHERE patientID = '" + patID + "' AND apptID = '" + apptId + "'"
                 + " ORDER BY imageID DESC;";
-        
+
         try {
             Connection conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
@@ -418,7 +440,7 @@ public class Rad extends Stage {
         }
         return list;
     }
-    
+
     private void updateAppointmentStatus(int patID, int apptId) {
         String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
         String sql = "UPDATE appointments"
@@ -434,5 +456,5 @@ public class Rad extends Stage {
             System.out.println(e.getMessage());
         }
     }
-    
+
 }
