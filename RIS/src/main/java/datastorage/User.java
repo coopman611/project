@@ -5,6 +5,8 @@
 package datastorage;
 
 import javafx.scene.control.Button;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 
 /**
  *
@@ -18,6 +20,19 @@ public class User {
     private int enabled;
     public Button placeholder = new Button("placeholder");
     private String roleVal;
+    private Image pfp;
+
+    public Image getPfp() {
+        return pfp;
+    }
+
+    public ImageView getPfpView() {
+        return new ImageView(pfp);
+    }
+
+    public void setPfp(Image pfp) {
+        this.pfp = pfp;
+    }
 
     public int getEnabled() {
         return enabled;

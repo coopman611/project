@@ -54,6 +54,7 @@ public class Rad extends Stage {
 
     HBox navbar = new HBox();
     Label username = new Label("Logged In as: " + App.user.getFullName());
+    ImageView pfp = new ImageView(App.user.getPfp());
 
     Button logOut = new Button("Log Out");
 
@@ -85,9 +86,11 @@ public class Rad extends Stage {
                 logOut();
             }
         });
+        pfp.setPreserveRatio(true);
+        pfp.setFitHeight(38);
         username.setId("navbar");
         username.setOnMouseClicked(eh -> userInfo());
-        navbar.getChildren().addAll(username, logOut);
+        navbar.getChildren().addAll(username, pfp, logOut);
         navbar.setStyle("-fx-background-color: #2f4f4f; -fx-spacing: 15;");
         main.setTop(navbar);
         //end navbar
@@ -184,7 +187,7 @@ public class Rad extends Stage {
                 z.placeholder.setOnAction(new EventHandler<ActionEvent>() {
                     @Override
                     public void handle(ActionEvent e) {
-                        radPageTwo(z.getPatientID(), z.getApptID(), z.getFullName(), z.getOrder(), sql);
+                        radPageTwo(z.getPatientID(), z.getApptID(), z.getFullName(), z.getOrder());
                     }
                 });
             }
@@ -247,7 +250,7 @@ public class Rad extends Stage {
         main.setCenter(tableContainer);
     }
 
-    private void radPageTwo(int patID, int apptId, String fullname, String order, String report) {
+    private void radPageTwo(int patID, int apptId, String fullname, String order) {
         VBox container = new VBox();
         container.setSpacing(10);
         container.setAlignment(Pos.CENTER);
@@ -257,18 +260,17 @@ public class Rad extends Stage {
                 new FileChooser.ExtensionFilter("Image Files", "*.png")
         //                 new FileChooser.ExtensionFilter("HTML Files", "*.htm")
         );
-        Button complete = new Button("Fulfill Order");
-        complete.setId("complete");
+//        Button complete = new Button("Fulfill Order");
+//        complete.setId("complete");
         Button cancel = new Button("Go Back");
         cancel.setId("cancel");
         Button addReport = new Button("Upload Report");
-        HBox buttonContainer = new HBox(cancel, addReport, complete);
+        HBox buttonContainer = new HBox(cancel, addReport);
         buttonContainer.setAlignment(Pos.CENTER);
         buttonContainer.setSpacing(25);
         container.getChildren().addAll(patInfo, buttonContainer);
         main.setCenter(container);
         //Set Size of Every button in buttonContainer
-        complete.setPrefSize(200, 100);
         cancel.setPrefSize(200, 100);
         addReport.setPrefSize(200, 100);
         //
@@ -283,21 +285,14 @@ public class Rad extends Stage {
         addReport.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent t) {
-                openFile(report, patID, apptId, order);
+                openFile(patID, apptId);
 
-            }
-        });
-
-        complete.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent t) {
-                completeOrder(patID, apptId);
             }
         });
 
     }
 
-    private void openFile(String report, int patID, int apptId, String order) {
+    private void openFile(int patID, int apptId) {
 
         Stage x = new Stage();
         x.initOwner(this);
@@ -342,9 +337,11 @@ public class Rad extends Stage {
         confirm.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent e) {
-                addReportToDatabase(report, apptId, patID, order);
+                addReportToDatabase(reportText.getText(), apptId);
                 updateAppointmentStatus(patID, apptId);
                 x.close();
+                populateTable();
+                main.setCenter(tableContainer);
             }
         });
 
@@ -353,21 +350,9 @@ public class Rad extends Stage {
         x.show();
     }
 
-    private void addReportToDatabase(String report, int patID, int apptId, String order) {
-        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
-        String sql = "INSERT INTO report (apptID, orderID, referralDocId, writtenreport) VALUES (?, ?, ?);";
-        try {
-            Connection conn = DriverManager.getConnection(url);
-            PreparedStatement pstmt = conn.prepareStatement(sql);
-            pstmt.setInt(1, apptId);
-            pstmt.setString(2, order);
-            pstmt.setString(3, report);
-            pstmt.executeUpdate();
-            pstmt.close();
-            conn.close();
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
+    private void addReportToDatabase(String report, int apptId) {
+        String sql = "INSERT INTO report (apptID, writtenreport) VALUES ('" + apptId + "', '" + report + "');";
+        App.executeSQLStatement(sql);
     }
 
     private void completeOrder(int patID, int apptId) {

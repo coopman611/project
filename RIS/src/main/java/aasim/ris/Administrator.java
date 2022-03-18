@@ -4,6 +4,8 @@ import datastorage.Appointment;
 import datastorage.Order;
 import datastorage.Patient;
 import datastorage.User;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -11,6 +13,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.collections.FXCollections;
 import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
@@ -27,6 +31,8 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -39,6 +45,7 @@ public class Administrator extends Stage {
 
     HBox navbar = new HBox();
     Label username = new Label("Logged In as: " + App.user.getFullName());
+    ImageView pfp = new ImageView(App.user.getPfp());
 
     Label users = new Label("Users");
     Label patients = new Label("Patients");
@@ -77,13 +84,15 @@ public class Administrator extends Stage {
                 logOut();
             }
         });
+        pfp.setPreserveRatio(true);
+        pfp.setFitHeight(38);
         username.setId("navbar");
         username.setOnMouseClicked(eh -> userInfo());
         HBox navButtons = new HBox(users, patients, appointments, modalities);
         navButtons.setAlignment(Pos.TOP_LEFT);
 //        navButtons.setSpacing(10);
         HBox.setHgrow(navButtons, Priority.ALWAYS);
-        navbar.getChildren().addAll(navButtons, username, logOut);
+        navbar.getChildren().addAll(navButtons, username, pfp, logOut);
         navbar.setStyle("-fx-background-color: #2f4f4f; -fx-spacing: 15;");
         main.setTop(navbar);
 
@@ -125,6 +134,7 @@ public class Administrator extends Stage {
     private void createTableUsers() {
         usersTable.getColumns().clear();
         //All of the Columns
+        TableColumn pfpCol = new TableColumn("PFP");
         TableColumn userIDCol = new TableColumn("User ID");
         TableColumn emailCol = new TableColumn("Email");
         TableColumn fullNameCol = new TableColumn("Full Name");
@@ -134,6 +144,7 @@ public class Administrator extends Stage {
         TableColumn buttonCol = new TableColumn("Update User");
 
         //And all of the Value setting
+        pfpCol.setCellValueFactory(new PropertyValueFactory<>("pfpView"));
         userIDCol.setCellValueFactory(new PropertyValueFactory<>("userID"));
         emailCol.setCellValueFactory(new PropertyValueFactory<>("email"));
         fullNameCol.setCellValueFactory(new PropertyValueFactory<>("fullName"));
@@ -143,16 +154,17 @@ public class Administrator extends Stage {
         buttonCol.setCellValueFactory(new PropertyValueFactory<>("placeholder"));
 
         //Couldn't put all the styling
+        pfpCol.prefWidthProperty().bind(usersTable.widthProperty().multiply(0.05));
         userIDCol.prefWidthProperty().bind(usersTable.widthProperty().multiply(0.05));
         emailCol.prefWidthProperty().bind(usersTable.widthProperty().multiply(0.2));
         fullNameCol.prefWidthProperty().bind(usersTable.widthProperty().multiply(0.2));
         usernameCol.prefWidthProperty().bind(usersTable.widthProperty().multiply(0.2));
-        roleCol.prefWidthProperty().bind(usersTable.widthProperty().multiply(0.2));
+        roleCol.prefWidthProperty().bind(usersTable.widthProperty().multiply(0.1));
         enabledCol.prefWidthProperty().bind(usersTable.widthProperty().multiply(0.05));
         buttonCol.prefWidthProperty().bind(usersTable.widthProperty().multiply(0.1));
         usersTable.setStyle("-fx-background-color: #25A18E; -fx-text-fill: WHITE; ");
         //Together again
-        usersTable.getColumns().addAll(userIDCol, emailCol, fullNameCol, usernameCol, roleCol, enabledCol, buttonCol);
+        usersTable.getColumns().addAll(pfpCol, userIDCol, emailCol, fullNameCol, usernameCol, roleCol, enabledCol, buttonCol);
         //Add Status Update Column:
     }
 
@@ -160,7 +172,7 @@ public class Administrator extends Stage {
         usersTable.getItems().clear();
         //Connect to database
         String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
-        String sql = "Select users.user_id, users.email, users.full_name, users.username, users.enabled, roles.role as roleID"
+        String sql = "Select users.user_id, users.email, users.full_name, users.username, users.enabled, users.pfp, roles.role as roleID"
                 + " FROM users "
                 + " INNER JOIN roles ON users.role = roles.roleID "
                 + ";";
@@ -175,6 +187,11 @@ public class Administrator extends Stage {
             while (rs.next()) {
                 //What I receieve:  int userID, String email, String fullName, String username, int role, int enabled
                 User user = new User(rs.getInt("user_id"), rs.getString("email"), rs.getString("full_name"), rs.getString("username"), 1, rs.getInt("enabled"), rs.getString("roleID"));
+                try {
+                    user.setPfp(new Image(new FileInputStream(App.imagePathDirectory + rs.getString("pfp"))));
+                } catch (FileNotFoundException ex) {
+                    user.setPfp(null);
+                }
                 list.add(user);
             }
             for (User z : list) {
@@ -211,7 +228,7 @@ public class Administrator extends Stage {
         //
         //Searchbar Structure
         ChoiceBox<String> choiceBox = new ChoiceBox();
-        TextField search = new TextField("Search Appointments");
+        TextField search = new TextField("Search Users");
         HBox searchContainer = new HBox(choiceBox, search);
         searchContainer.setAlignment(Pos.TOP_RIGHT);
         HBox.setHgrow(searchContainer, Priority.ALWAYS);
@@ -299,7 +316,7 @@ public class Administrator extends Stage {
 
     private void insertUserIntoDatabase(String email, String name, String username, String password, String role) {
         String sql = "INSERT INTO users(email, full_name, username, password, role) VALUES ('" + email + "','" + name + "','" + username + "','" + password + "', (SELECT roleID FROM roles WHERE role = '" + role + "'));";
-        App.executeSQLStatement(App.fileName, sql);
+        App.executeSQLStatement(sql);
 
     }
 
@@ -361,7 +378,7 @@ public class Administrator extends Stage {
                     return;
                 }
                 String sql = "UPDATE users SET email = '" + input.getText() + "' WHERE user_id = '" + z.getUserID() + "';";
-                App.executeSQLStatement(App.fileName, sql);
+                App.executeSQLStatement(sql);
                 usersPageView();
                 x.close();
             }
@@ -380,7 +397,7 @@ public class Administrator extends Stage {
 
             private void updatePassword() {
                 String sql = "UPDATE users SET password = '" + input.getText() + "' WHERE user_id = '" + z.getUserID() + "';";
-                App.executeSQLStatement(App.fileName, sql);
+                App.executeSQLStatement(sql);
                 usersPageView();
                 x.close();
             }
@@ -409,7 +426,7 @@ public class Administrator extends Stage {
                             enabled = 1;
                         }
                         String sql = "UPDATE users SET enabled = '" + enabled + "' WHERE user_id = '" + z.getUserID() + "';";
-                        App.executeSQLStatement(App.fileName, sql);
+                        App.executeSQLStatement(sql);
                         usersPageView();
                         x.close();
                     } else {
@@ -444,7 +461,7 @@ public class Administrator extends Stage {
 
         //Searchbar Structure
         ChoiceBox<String> choiceBox = new ChoiceBox();
-        TextField search = new TextField("Search Appointments");
+        TextField search = new TextField("Search Patients");
         HBox searchContainer = new HBox(choiceBox, search);
         searchContainer.setAlignment(Pos.TOP_RIGHT);
         HBox.setHgrow(searchContainer, Priority.ALWAYS);
@@ -603,7 +620,6 @@ public class Administrator extends Stage {
         TableColumn timeCol = new TableColumn("Time of Appt.");
         TableColumn orderCol = new TableColumn("Orders Requested");
         TableColumn status = new TableColumn("Status");
-        TableColumn updateAppt = new TableColumn("Update Appointment");
 
         apptIDCol.setCellValueFactory(new PropertyValueFactory<>("apptID"));
         patientIDCol.setCellValueFactory(new PropertyValueFactory<>("patientID"));
@@ -611,7 +627,6 @@ public class Administrator extends Stage {
         timeCol.setCellValueFactory(new PropertyValueFactory<>("time"));
         orderCol.setCellValueFactory(new PropertyValueFactory<>("order"));
         status.setCellValueFactory(new PropertyValueFactory<>("status"));
-        updateAppt.setCellValueFactory(new PropertyValueFactory<>("placeholder"));
 
         //Set Column Widths
         apptIDCol.prefWidthProperty().bind(appointmentsTable.widthProperty().multiply(0.05));
@@ -619,10 +634,9 @@ public class Administrator extends Stage {
         firstNameCol.prefWidthProperty().bind(appointmentsTable.widthProperty().multiply(0.1));
         timeCol.prefWidthProperty().bind(appointmentsTable.widthProperty().multiply(0.1));
         orderCol.prefWidthProperty().bind(appointmentsTable.widthProperty().multiply(0.4));
-        updateAppt.prefWidthProperty().bind(appointmentsTable.widthProperty().multiply(0.1));
         status.prefWidthProperty().bind(appointmentsTable.widthProperty().multiply(0.2));
         //Add columns to table
-        appointmentsTable.getColumns().addAll(apptIDCol, patientIDCol, firstNameCol, timeCol, orderCol, status, updateAppt);
+        appointmentsTable.getColumns().addAll(apptIDCol, patientIDCol, firstNameCol, timeCol, orderCol, status);
     }
 
     private void populateTableAppointments() {
@@ -650,14 +664,6 @@ public class Administrator extends Stage {
                 list.add(appt);
             }
 
-            for (Appointment x : list) {
-                x.placeholder.setText("Update Appointment");
-                x.placeholder.setOnAction(new EventHandler<ActionEvent>() {
-                    @Override
-                    public void handle(ActionEvent e) {
-                    }
-                });
-            }
             flAppointment = new FilteredList(FXCollections.observableList(list), p -> true);
             appointmentsTable.getItems().addAll(flAppointment);
             //
@@ -698,6 +704,7 @@ public class Administrator extends Stage {
     }
 
     //</editor-fold>
+    
 //<editor-fold defaultstate="collapsed" desc="Modalities Section">
     private void modalitiesPageView() {
         modalitiesContainer.getChildren().clear();
@@ -768,7 +775,7 @@ public class Administrator extends Stage {
                     @Override
                     public void handle(ActionEvent e) {
                         String sql = "DELETE FROM orderCodes WHERE orderID = '" + z.getOrderID() + "' ";
-                        App.executeSQLStatement(App.fileName, sql);
+                        App.executeSQLStatement(sql);
                         populateTableModalities();
                     }
                 });
@@ -810,7 +817,7 @@ public class Administrator extends Stage {
             @Override
             public void handle(ActionEvent eh) {
                 String sql = "INSERT INTO orderCodes(orders) VALUES ('" + order.getText() + "') ;";
-                App.executeSQLStatement(App.fileName, sql);
+                App.executeSQLStatement(sql);
                 populateTableModalities();
                 x.close();
             }
@@ -819,4 +826,5 @@ public class Administrator extends Stage {
     }
 
     //</editor-fold>
+
 }

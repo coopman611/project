@@ -44,7 +44,8 @@ public class ReferralDoctor extends Stage {
 
     HBox navbar = new HBox();
     Label username = new Label("Logged In as: " + App.user.getFullName());
-    
+    ImageView pfp = new ImageView(App.user.getPfp());
+
     Button logOut = new Button("Log Out");
 
     //End Navbar
@@ -61,12 +62,14 @@ public class ReferralDoctor extends Stage {
     //End Scene
     private FilteredList<Patient> flPatient;
     ChoiceBox<String> choiceBox = new ChoiceBox();
-    TextField search = new TextField("Search Appointments");
+    TextField search = new TextField("Search Patients");
     HBox searchContainer = new HBox(choiceBox, search);
-    
+
     public ReferralDoctor() {
         this.setTitle("RIS - Radiology Information System (Doctor View)");
         //Navbar
+        pfp.setPreserveRatio(true);
+        pfp.setFitHeight(38);
         navbar.setAlignment(Pos.TOP_RIGHT);
         logOut.setPrefHeight(30);
         logOut.setOnAction(new EventHandler<ActionEvent>() {
@@ -76,8 +79,8 @@ public class ReferralDoctor extends Stage {
             }
         });
         username.setId("navbar");
-        username.setOnMouseClicked(eh -> userInfo()); 
-        navbar.getChildren().addAll(username, logOut);
+        username.setOnMouseClicked(eh -> userInfo());
+        navbar.getChildren().addAll(username, pfp, logOut);
         navbar.setStyle("-fx-background-color: #2f4f4f; -fx-spacing: 15;");
         main.setTop(navbar);
         //End navbar
@@ -90,14 +93,14 @@ public class ReferralDoctor extends Stage {
         //Button Container
         buttonContainer.setSpacing(10);
         buttonContainer.setPadding(new Insets(5));
-        
+
         Button addPatient = new Button("Add Patient");
         addPatient.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent e) {
                 addPatient();
             }
-            
+
         });
         buttonContainer.getChildren().addAll(addPatient);
         //End Button Container
@@ -136,7 +139,7 @@ public class ReferralDoctor extends Stage {
         scene.getStylesheets().add("file:stylesheet.css");
         this.setScene(scene);
     }
-    
+
     private void createTablePatients() {
         //All of the Columns
         TableColumn patientIDCol = new TableColumn("Patient ID");
@@ -158,12 +161,12 @@ public class ReferralDoctor extends Stage {
         emailCol.prefWidthProperty().bind(patientsTable.widthProperty().multiply(0.2));
         DOBCol.prefWidthProperty().bind(patientsTable.widthProperty().multiply(0.1));
         updateStatusCol.prefWidthProperty().bind(patientsTable.widthProperty().multiply(0.5));
-        
+
         patientsTable.setStyle("-fx-background-color: #25A18E; -fx-text-fill: WHITE; ");
         //back together again
         patientsTable.getColumns().addAll(patientIDCol, fullNameCol, emailCol, DOBCol, updateStatusCol);
     }
-    
+
     private void populateTable() {
         patientsTable.getItems().clear();
         //Connect to database
@@ -172,7 +175,7 @@ public class ReferralDoctor extends Stage {
                 + " FROM docPatientConnector"
                 + " INNER JOIN patients ON docPatientConnector.patientID = patients.patientID"
                 + " WHERE docPatientConnector.referralDocID = '" + App.user.getUserID() + "';";
-        
+
         try {
             Connection conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
@@ -184,7 +187,7 @@ public class ReferralDoctor extends Stage {
                 Patient pat = new Patient(rs.getInt("patientID"), rs.getString("email"), rs.getString("full_name"), rs.getString("dob"), rs.getString("address"), rs.getString("insurance"));
                 list.add(pat);
             }
-            
+
             for (Patient z : list) {
                 z.placeholder.setText("Patient Overview");
                 z.placeholder.setOnAction(new EventHandler<ActionEvent>() {
@@ -192,10 +195,10 @@ public class ReferralDoctor extends Stage {
                     public void handle(ActionEvent e) {
                         patientOverviewScreen(z);
                     }
-                    
+
                 });
             }
-            
+
             flPatient = new FilteredList(FXCollections.observableList(list), p -> true);
             patientsTable.getItems().addAll(flPatient);
             //
@@ -206,7 +209,7 @@ public class ReferralDoctor extends Stage {
             System.out.println(e.getMessage());
         }
     }
-    
+
     private void logOut() {
         App.user = new User();
         Stage x = new Login();
@@ -214,14 +217,14 @@ public class ReferralDoctor extends Stage {
         x.setMaximized(true);
         this.close();
     }
-    
+
     private void userInfo() {
         Stage x = new UserInfo();
         x.show();
         x.setMaximized(true);
         this.close();
     }
-    
+
     private void addPatient() {
         Stage x = new Stage();
         x.initOwner(this);
@@ -249,19 +252,19 @@ public class ReferralDoctor extends Stage {
 //        HBox hiddenContainer2 = new HBox();
         HBox hiddenContainer3 = new HBox(text4, insurance);
         Button hiddenSubmit = new Button("Create New Patient");
-        
+
         text1.setPrefWidth(100);
         text2.setPrefWidth(100);
         text3.setPrefWidth(100);
         text4.setPrefWidth(100);
         hiddenContainer1.setSpacing(10);
         hiddenContainer1.setPadding(new Insets(10));
-        
+
         hiddenContainer3.setSpacing(10);
         hiddenContainer3.setPadding(new Insets(10));
-        
+
         hiddenSubmit.setPadding(new Insets(10));
-        
+
         hiddenContainer1.setVisible(false);
         hiddenContainer3.setVisible(false);
         hiddenSubmit.setVisible(false);
@@ -269,7 +272,7 @@ public class ReferralDoctor extends Stage {
         Label text5 = new Label("Patient ID: ");
         text5.setPrefWidth(150);
         VBox center = new VBox(container, hiddenContainer1, hiddenContainer3, hiddenSubmit);
-        
+
         container.setSpacing(10);
         center.setAlignment(Pos.CENTER);
         center.setPadding(new Insets(10));
@@ -277,14 +280,14 @@ public class ReferralDoctor extends Stage {
         y.getStylesheets().add("file:stylesheet.css");
         x.setScene(new Scene(y));
         x.show();
-        
+
         datePicker.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent t) {
                 LocalDate date = datePicker.getValue();
             }
         });
-        
+
         pullData.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent t) {
@@ -296,7 +299,7 @@ public class ReferralDoctor extends Stage {
                     a.setContentText("Please enter a valid full name. \n");
                     a.show();
                     return;
-                } 
+                }
                 if (email.getText().isBlank() || !email.getText().matches("[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?")) {
                     Alert a = new Alert(Alert.AlertType.INFORMATION);
                     a.setTitle("Error");
@@ -316,7 +319,7 @@ public class ReferralDoctor extends Stage {
                     address.setText(temp.getAddress());
                     insurance.setText(temp.getInsurance());
                 }
-                
+
                 email.setEditable(false);
                 name.setEditable(false);
                 hiddenContainer1.setVisible(true);
@@ -325,7 +328,7 @@ public class ReferralDoctor extends Stage {
                 hiddenSubmit.setVisible(true);
             }
         });
-        
+
         hiddenSubmit.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent t) {
@@ -359,19 +362,19 @@ public class ReferralDoctor extends Stage {
                 populateTable();
                 x.close();
             }
-            
+
         });
-        
+
     }
-    
+
     private Patient checkDatabaseForPatient(String name, String email) {
         Patient temp = null;
-        
+
         String sql = "Select * "
                 + " FROM patients"
                 + " WHERE email = '" + email + "' AND full_name = '" + name + "';";
         String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
-        
+
         try {
             Connection conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
@@ -389,19 +392,19 @@ public class ReferralDoctor extends Stage {
         }
         return temp;
     }
-    
+
     private void insertPatientIntoDatabase(String name, String email, String dob, String address, String insurance) {
         String sql = "INSERT INTO patients(full_name, email, dob, address, insurance) "
                 + " VALUES ('" + name + "','" + email + "','" + dob + "','" + address + "','" + insurance + "');";
-        App.executeSQLStatement(App.fileName, sql);
-        
+        App.executeSQLStatement(sql);
+
         int patientID = checkDatabaseForPatient(name, email).getPatientID();
         String sql1 = "INSERT INTO docPatientConnector "
                 + " VALUES ('" + App.user.getUserID() + "', '" + patientID + "');";
-        App.executeSQLStatement(App.fileName, sql1);
-        
+        App.executeSQLStatement(sql1);
+
     }
-    
+
     private void patientOverviewScreen(Patient z) {
         // Appointments table
         //Patient Info
@@ -460,7 +463,7 @@ public class ReferralDoctor extends Stage {
                 createNewOrder(z);
                 text2.setText("Orders Requested: " + getPatOrders(z.getPatientID()));
             }
-            
+
         });
         removeOrder.setOnAction(new EventHandler<ActionEvent>() {
             @Override
@@ -468,7 +471,7 @@ public class ReferralDoctor extends Stage {
                 removeOrder(z);
                 text2.setText("Orders Requested: " + getPatOrders(z.getPatientID()));
             }
-            
+
         });
         goBack.setOnAction(new EventHandler<ActionEvent>() {
             @Override
@@ -476,17 +479,17 @@ public class ReferralDoctor extends Stage {
                 appointmentsTable.getColumns().clear();
                 main.setCenter(tableContainer);
             }
-            
+
         });
         delete.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent e) {
                 removePatientFromView(z);
             }
-            
+
         });
     }
-    
+
     private void removePatientFromView(Patient z) {
         Stage x = new Stage();
         x.initOwner(this);
@@ -504,7 +507,7 @@ public class ReferralDoctor extends Stage {
             public void handle(ActionEvent e) {
                 if (text.getText().equals("CONFIRM")) {
                     String sql = "DELETE FROM docPatientConnector WHERE patientID = '" + z.getPatientID() + "' AND referralDocID = '" + App.user.getUserID() + "';";
-                    App.executeSQLStatement(App.fileName, sql);
+                    App.executeSQLStatement(sql);
                     x.close();
                     populateTable();
                     appointmentsTable.getColumns().clear();
@@ -518,11 +521,11 @@ public class ReferralDoctor extends Stage {
                 }
             }
         });
-        
+
         x.showAndWait();
-        
+
     }
-    
+
     private void populateAppointmentsTable(Patient pat) {
         appointmentsTable.getItems().clear();
         //Connect to database
@@ -532,7 +535,7 @@ public class ReferralDoctor extends Stage {
                 + " INNER JOIN statusCode ON appointments.statusCode = statusCode.statusID "
                 + " WHERE patient_id = '" + pat.getPatientID() + "' AND statusCode < 7"
                 + " ORDER BY time ASC;";
-        
+
         try {
             Connection conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
@@ -544,7 +547,7 @@ public class ReferralDoctor extends Stage {
                 Appointment temp = new Appointment(rs.getInt("appt_id"), pat.getPatientID(), rs.getString("time"), rs.getString("status"), getPatOrders(pat.getPatientID(), rs.getInt("appt_id")));
                 list.add(temp);
             }
-            
+
             for (Appointment x : list) {
                 if (x.getStatus().contains(".")) {
                     x.placeholder.setText("View Radiology Report");
@@ -557,13 +560,13 @@ public class ReferralDoctor extends Stage {
                             viewRadiologyReport(pat, x);
                         }
                     });
-                    
+
                 } else {
                     x.placeholder.setText("Radiology Report not created yet");
                     x.placeholder.setId("cancel");
                 }
             }
-            
+
             appointmentsTable.getItems().addAll(list);
             //
             rs.close();
@@ -573,7 +576,7 @@ public class ReferralDoctor extends Stage {
             System.out.println(e.getMessage());
         }
     }
-    
+
     private String getPatOrders(int patientID) {
         String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
         String sql = "Select orderCodes.orders "
@@ -599,14 +602,14 @@ public class ReferralDoctor extends Stage {
         }
         return value;
     }
-    
+
     private String getPatOrders(int patientID, int aInt) {
         String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
         String sql = "Select orderCodes.orders "
                 + " FROM appointmentsOrdersConnector "
                 + " INNER JOIN orderCodes ON appointmentsOrdersConnector.orderCodeID = orderCodes.orderID "
                 + " WHERE apptID = '" + aInt + "';";
-        
+
         String value = "";
         try {
             Connection conn = DriverManager.getConnection(url);
@@ -615,7 +618,7 @@ public class ReferralDoctor extends Stage {
             //
 
             while (rs.next()) {
-                
+
                 value += rs.getString("orders") + ", ";
             }
             //
@@ -627,7 +630,7 @@ public class ReferralDoctor extends Stage {
         }
         return value;
     }
-    
+
     private void createNewOrder(Patient z) {
         Stage x = new Stage();
         x.initOwner(this);
@@ -636,20 +639,20 @@ public class ReferralDoctor extends Stage {
         BorderPane y = new BorderPane();
         Label text1 = new Label("Order: ");
         text1.setPrefWidth(200);
-        
+
         ComboBox dropdown = populateOrdersDropdown();
         Button insertOrder = new Button("Create New Order");
         HBox container = new HBox(text1, dropdown, insertOrder);
         //End Hidden Containers
         VBox center = new VBox(container);
-        
+
         container.setSpacing(10);
         center.setAlignment(Pos.CENTER);
         center.setPadding(new Insets(10));
         y.setCenter(center);
         y.getStylesheets().add("file:stylesheet.css");
         x.setScene(new Scene(y));
-        
+
         insertOrder.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent e) {
@@ -660,9 +663,9 @@ public class ReferralDoctor extends Stage {
             }
         });
         x.showAndWait();
-        
+
     }
-    
+
     private void removeOrder(Patient z) {
         Stage x = new Stage();
         x.initOwner(this);
@@ -679,14 +682,14 @@ public class ReferralDoctor extends Stage {
         HBox cont = new HBox(confirmTxt, confirm);
         //End Hidden Containers
         VBox center = new VBox(container, cont);
-        
+
         container.setSpacing(10);
         center.setAlignment(Pos.CENTER);
         center.setPadding(new Insets(10));
         y.setCenter(center);
         y.getStylesheets().add("file:stylesheet.css");
         x.setScene(new Scene(y));
-        
+
         insertOrder.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent e) {
@@ -695,19 +698,19 @@ public class ReferralDoctor extends Stage {
                     x.close();
                 }
             }
-            
+
         });
         x.showAndWait();
     }
-    
+
     private void removeOrder(Patient z, String order) {
         String sql = "DELETE FROM patientOrders "
                 + " WHERE patientID = '" + z.getPatientID() + "' AND orderCodeID = (SELECT orderCodes.orderID FROM orderCodes WHERE orderCodes.orders = '" + order + "')"
                 + "     AND ROWID = (SELECT ROWID FROM patientOrders WHERE patientID = '" + z.getPatientID() + "' AND orderCodeID = (SELECT orderCodes.orderID FROM orderCodes WHERE orderCodes.orders = '" + order + "') LIMIT 1)"
                 + " ;";
-        App.executeSQLStatement(App.fileName, sql);
+        App.executeSQLStatement(sql);
     }
-    
+
     private ComboBox populateOrdersDropdown() {
         String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
         String sql = "Select orders "
@@ -731,12 +734,12 @@ public class ReferralDoctor extends Stage {
         }
         return dropdown;
     }
-    
+
     private void insertNewOrder(Patient z, String x) {
         String sql = "INSERT INTO  patientOrders VALUES ('" + z.getPatientID() + "', (SELECT orderID FROM orderCodes WHERE orders = '" + x + "'), '1');";
-        App.executeSQLStatement(App.fileName, sql);
+        App.executeSQLStatement(sql);
     }
-    
+
     private void viewRadiologyReport(Patient z, Appointment appt) {
         Stage x = new Stage();
         x.initOwner(this);
@@ -744,7 +747,7 @@ public class ReferralDoctor extends Stage {
         x.initModality(Modality.WINDOW_MODAL);
         x.setMaximized(true);
         BorderPane y = new BorderPane();
-        
+
         Button confirm = new Button("Confirm Read Receipt");
         confirm.setId("complete");
         //
@@ -786,7 +789,7 @@ public class ReferralDoctor extends Stage {
         y.setCenter(center);
         y.getStylesheets().add("file:stylesheet.css");
         x.setScene(new Scene(y));
-        
+
         confirm.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent e) {
@@ -794,21 +797,21 @@ public class ReferralDoctor extends Stage {
                 x.close();
                 populateAppointmentsTable(z);
             }
-            
+
         });
         x.showAndWait();
     }
-    
+
     private ArrayList<Pair> retrieveUploadedImages(int apptId) {
         //Connect to database
         ArrayList<Pair> list = new ArrayList<Pair>();
-        
+
         String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
         String sql = "SELECT *"
                 + " FROM images"
                 + " WHERE apptID = '" + apptId + "'"
                 + " ORDER BY imageID DESC;";
-        
+
         try {
             Connection conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
@@ -828,7 +831,7 @@ public class ReferralDoctor extends Stage {
         }
         return list;
     }
-    
+
     private String getRadiologyReport(int apptID) {
         String value = "";
         String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
@@ -853,39 +856,39 @@ public class ReferralDoctor extends Stage {
         }
         return value;
     }
-    
+
     private void updateStatus(int apptID) {
         String sql = "UPDATE appointments "
                 + " SET statusCode = 6 "
                 + " WHERE appt_id = '" + apptID + "';";
-        App.executeSQLStatement(App.fileName, sql);
+        App.executeSQLStatement(sql);
     }
-    
+
     private class Pair {
-        
+
         Image img;
         Integer imgID;
-        
+
         public Pair(Image img, Integer imgID) {
             this.img = img;
             this.imgID = imgID;
         }
-        
+
         public Image getImg() {
             return img;
         }
-        
+
         public void setImg(Image img) {
             this.img = img;
         }
-        
+
         public Integer getImgID() {
             return imgID;
         }
-        
+
         public void setImgID(Integer imgID) {
             this.imgID = imgID;
         }
-        
+
     }
 }

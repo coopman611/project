@@ -31,6 +31,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -45,6 +46,7 @@ public class Receptionist extends Stage {
     HBox navbar = new HBox();
     Button logOut = new Button("Log Out");
     Label username = new Label("Logged In as: " + App.user.getFullName());
+    ImageView pfp = new ImageView(App.user.getPfp());
 
     BorderPane main = new BorderPane();
     Scene scene = new Scene(main);
@@ -75,11 +77,13 @@ public class Receptionist extends Stage {
     Receptionist() {
         this.setTitle("RIS- Radiology Information System (Reception)");
         //Navbar
+        pfp.setPreserveRatio(true);
+        pfp.setFitHeight(38);
         navbar.setAlignment(Pos.TOP_RIGHT);
         logOut.setPrefHeight(30);
         username.setId("navbar");
         username.setOnMouseClicked(eh -> userInfo());
-        navbar.getChildren().addAll(username, logOut);
+        navbar.getChildren().addAll(username, pfp, logOut);
         navbar.setStyle("-fx-background-color: #2f4f4f; -fx-spacing: 15;");
         main.setTop(navbar);
         //End navbar
@@ -275,12 +279,12 @@ public class Receptionist extends Stage {
         populateTable();
     }
 
-    //On button press, open up a new stage (calls private nested class)
+    //On button press, open up a new stage
     private void updateAppointment(Appointment appt) {
         Stage x = new Stage();
         x.setTitle("Update Appointment");
         x.initOwner(this);
-        x.setMaximized(true);
+        x.setHeight(250);
         x.initModality(Modality.WINDOW_MODAL);
         //
         Button updateTime = new Button("Reschedule Appointment");
@@ -470,14 +474,14 @@ public class Receptionist extends Stage {
         String sql = "UPDATE patients "
                 + " SET email = '" + patient.getEmail() + "', address = '" + patient.getAddress() + "', insurance = '" + patient.getInsurance() + "' "
                 + " WHERE patientID = '" + patient.getPatientID() + "';";
-        App.executeSQLStatement(App.fileName, sql);
+        App.executeSQLStatement(sql);
     }
 
     private void updateTime(String string, int apptID) {
         String sql = "UPDATE appointments "
                 + " SET time = '" + string + "' "
                 + " WHERE appt_id = '" + apptID + "';";
-        App.executeSQLStatement(App.fileName, sql);
+        App.executeSQLStatement(sql);
     }
 
     private void updateStatus(String status, Appointment appt) {
@@ -485,11 +489,11 @@ public class Receptionist extends Stage {
                 + " SET statusCode = "
                 + "     (SELECT statusID FROM statusCode WHERE status = '" + status + "') "
                 + " WHERE appt_id = '" + appt.getApptID() + "';";
-        App.executeSQLStatement(App.fileName, sql);
+        App.executeSQLStatement(sql);
 
         if (status.contains("Cancelled")) {
             String sql1 = "INSERT INTO  patientOrders VALUES ('" + appt.getPatientID() + "', (SELECT orderCodeID FROM appointmentsOrdersConnector WHERE apptID = '" + appt.getApptID() + "'), '1');";
-            App.executeSQLStatement(App.fileName, sql1);
+            App.executeSQLStatement(sql1);
         }
     }
 
@@ -644,7 +648,7 @@ public class Receptionist extends Stage {
         private void insertAppointment(int patientID, ArrayList<String> orders, String time) {
             String sql = "INSERT INTO appointments(patient_id, time, statusCode)"
                     + " VALUES ('" + patientID + "', '" + time + "', '1');\n";
-            App.executeSQLStatement(App.fileName, sql);
+            App.executeSQLStatement(sql);
             for (String x : orders) {
                 String sql1 = "INSERT INTO appointmentsOrdersConnector(apptID, orderCodeID)"
                         + " VALUES ("
@@ -652,9 +656,9 @@ public class Receptionist extends Stage {
                         + " (SELECT orderID FROM orderCodes WHERE orders = '" + x + "') "
                         + ");\n";
 
-                App.executeSQLStatement(App.fileName, sql1);
+                App.executeSQLStatement(sql1);
                 String sql2 = "DELETE FROM patientOrders WHERE patientID = '" + patientID + "' AND orderCodeID = (SELECT orderID FROM orderCodes WHERE orders = '" + x + "')";
-                App.executeSQLStatement(App.fileName, sql2);
+                App.executeSQLStatement(sql2);
             }
             this.close();
         }
