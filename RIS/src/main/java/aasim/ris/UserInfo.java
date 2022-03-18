@@ -54,7 +54,7 @@ import javafx.util.Callback;
 public class UserInfo extends Stage {
 
     //Navbar
-    private final int IMAGES_PER_ROW = 5;
+    private final int IMAGES_PER_ROW = 6;
     HBox navbar = new HBox();
     Label usernameLabel = new Label("Logged In as: " + App.user.getFullName());
     ImageView pfp = new ImageView(App.user.getPfp());
@@ -190,7 +190,9 @@ public class UserInfo extends Stage {
             }
         }
 
-        container.getChildren().add(imgContainer);
+        ScrollPane s1 = new ScrollPane();
+        s1.setPrefHeight(600);
+        container.getChildren().add(s1);
         for (HBox temp : hboxList) {
             temp.setAlignment(Pos.CENTER);
             temp.setPadding(new Insets(10));
@@ -198,7 +200,7 @@ public class UserInfo extends Stage {
             imgContainer.getChildren().add(temp);
 
         }
-
+        s1.setContent(imgContainer);
         //
         //
         goBack.setOnAction(eh -> goBack());
