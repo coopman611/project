@@ -45,7 +45,7 @@ public class Login extends Stage {
     private GridPane grid = new GridPane();
     VBox center = new VBox();
     Scene scene = new Scene(center, 1000, 1000);
-    
+
     Login() {
         //Setting the Title
         this.setTitle("RIS- Radiology Information System (Logging In)");
@@ -57,7 +57,7 @@ public class Login extends Stage {
             public void handle(ActionEvent e) {
                 loginCheck();
             }
-            
+
         });
         inputUsername.setId("textfield");
         inputPassword.setId("textfield");
@@ -77,9 +77,9 @@ public class Login extends Stage {
         //Setting scene appropriately
         scene.getStylesheets().add("file:stylesheet.css");
         this.setScene(scene);
-        
+
     }
-    
+
     private void changeGridPane() {
         //Gridpane does what Gridpane does best
         //Everything's on a grid. 
@@ -105,22 +105,27 @@ public class Login extends Stage {
 //    
     private void loginCheck() {
         String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
-        
+
         String username = inputUsername.getText();
         String password = inputPassword.getText();
         String sql = "Select * FROM users WHERE username = '" + username + "' AND password = '" + password + "' AND enabled = 1;";
-        
+
         try {
             Connection conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
-            
+
             int userId = rs.getInt("user_id");
             String fullName = rs.getString("full_name");
             int role = rs.getInt("role");
             App.user = new User(userId, fullName, role);
             App.user.setEmail(rs.getString("email"));
             App.user.setUsername(rs.getString("username"));
+            try {
+                App.user.setPfp(new Image(new FileInputStream(App.imagePathDirectory + rs.getString("pfp"))));
+            } catch (FileNotFoundException ex) {
+                App.user.setPfp(null);
+            }
             //
             rs.close();
             stmt.close();
@@ -151,7 +156,7 @@ public class Login extends Stage {
                 x.setMaximized(true);
                 this.hide();
             } else if (App.user.getRole() == 6) {
-                
+
             } else if (App.user.getRole() == 1) {
                 Stage x = new Administrator();
                 x.show();
@@ -161,13 +166,13 @@ public class Login extends Stage {
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             Alert a = new Alert(AlertType.INFORMATION);
-            
+
             a.setTitle("Error");
             a.setHeaderText("Try Again");
             a.setContentText("Username / Password not found. \nPlease contact an administrator if problem persists. ");
             a.show();
         }
-        
+
     }
-    
+
 }

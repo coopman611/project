@@ -5,6 +5,7 @@ import datastorage.User;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -12,10 +13,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import javafx.collections.FXCollections;
 import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
@@ -36,6 +41,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -46,10 +52,12 @@ import javafx.stage.Stage;
 import javafx.util.Callback;
 
 public class UserInfo extends Stage {
-    //Navbar
 
+    //Navbar
+    private final int IMAGES_PER_ROW = 5;
     HBox navbar = new HBox();
     Label usernameLabel = new Label("Logged In as: " + App.user.getFullName());
+    ImageView pfp = new ImageView(App.user.getPfp());
     Button logOut = new Button("Log Out");
 
     //End Navbar
@@ -60,6 +68,8 @@ public class UserInfo extends Stage {
     Scene scene = new Scene(main);
 
     //End Scene
+    List<File> fileList = new ArrayList<File>();
+
     public UserInfo() {
         this.setTitle("RIS - Radiology Information System (Technician)");
         //Navbar
@@ -74,7 +84,9 @@ public class UserInfo extends Stage {
         usernameLabel.setId("navbar");
         usernameLabel.setOnMouseClicked(eh -> userInfo());
 
-        navbar.getChildren().addAll(usernameLabel, logOut);
+        navbar.getChildren().addAll(usernameLabel, pfp, logOut);
+        pfp.setPreserveRatio(true);
+        pfp.setFitHeight(38);
         navbar.setStyle("-fx-background-color: #2f4f4f; -fx-spacing: 15;");
         main.setTop(navbar);
         //End navbar
@@ -120,7 +132,75 @@ public class UserInfo extends Stage {
         VBox container = new VBox(c5, c6, btnContainer);
         container.setPadding(new Insets(10));
         main.setCenter(container);
+//
+        //
+        populateImgList();
 
+        VBox imgContainer = new VBox();
+        imgContainer.setPadding(new Insets(10));
+        imgContainer.setSpacing(10);
+        ArrayList<HBox> hboxList = new ArrayList<HBox>();
+
+        for (int i = 0; i < (fileList.size() / IMAGES_PER_ROW) + 1; i++) {
+            hboxList.add(new HBox());
+        }
+
+        int counter = 0;
+        int hboxCounter = 0;
+        for (File x : fileList) {
+            FileInputStream te = null;
+            try {
+                if (counter > IMAGES_PER_ROW) {
+                    hboxCounter++;
+                    counter = 0;
+                }
+                te = new FileInputStream(x.getAbsoluteFile());
+                Image tem = new Image(te);
+                ImageView temp = new ImageView(tem);
+                temp.setPreserveRatio(true);
+                temp.setFitHeight(150);
+                Label label = new Label(x.getName());
+                VBox temp1 = new VBox(temp, label);
+                //
+                temp1.setId("navbar");
+                temp1.setOnMouseClicked(new EventHandler<MouseEvent>() {
+                    @Override
+                    public void handle(MouseEvent eh) {
+                        String sql = "UPDATE users SET pfp = '" + label.getText() + "' WHERE user_id = '" + App.user.getUserID() + "';";
+                        App.executeSQLStatement(sql);
+                        App.user.setPfp(tem);
+                        navbar.getChildren().removeAll(pfp, logOut);
+                        pfp = new ImageView(tem);
+                        pfp.setPreserveRatio(true);
+                        pfp.setFitHeight(38);
+                        navbar.getChildren().addAll(pfp, logOut);
+                    }
+                });
+                //
+                hboxList.get(hboxCounter).getChildren().add(temp1);
+                counter++;
+            } catch (FileNotFoundException ex) {
+                Logger.getLogger(UserInfo.class.getName()).log(Level.SEVERE, null, ex);
+            } finally {
+                try {
+                    te.close();
+                } catch (IOException ex) {
+                    Logger.getLogger(UserInfo.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
+
+        container.getChildren().add(imgContainer);
+        for (HBox temp : hboxList) {
+            temp.setAlignment(Pos.CENTER);
+            temp.setPadding(new Insets(10));
+            temp.setSpacing(10);
+            imgContainer.getChildren().add(temp);
+
+        }
+
+        //
+        //
         goBack.setOnAction(eh -> goBack());
 
         confirm.setOnAction(new EventHandler<ActionEvent>() {
@@ -137,11 +217,11 @@ public class UserInfo extends Stage {
 
                 if (password.getText().isBlank()) {
                     String sql = "UPDATE users SET email = '" + email.getText() + "' WHERE user_id = '" + App.user.getUserID() + "';";
-                    App.executeSQLStatement(App.fileName, sql);
+                    App.executeSQLStatement(sql);
                     goBack();
                 } else if (password.getText().equals(passwordConfirm.getText())) {
                     String sql = "UPDATE users SET email = '" + email.getText() + "', password = '" + password.getText() + "' WHERE user_id = '" + App.user.getUserID() + "';";
-                    App.executeSQLStatement(App.fileName, sql);
+                    App.executeSQLStatement(sql);
                     goBack();
                 } else {
                     Alert a = new Alert(Alert.AlertType.INFORMATION);
@@ -208,4 +288,15 @@ public class UserInfo extends Stage {
         x.setMaximized(true);
         this.close();
     }
+
+    private void populateImgList() {
+        String dirname = "Favicons";
+        File dir = new File(dirname);
+        if (!dir.exists()) {
+            fileList = Collections.emptyList();
+        }
+        fileList = Arrays.stream(Objects.requireNonNull(dir.listFiles())).collect(Collectors.toList());
+
+    }
+
 }
