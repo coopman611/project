@@ -14,21 +14,19 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Group;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 
 /**
  *
@@ -47,7 +45,7 @@ public class Login extends Stage {
     private GridPane grid = new GridPane();
     VBox center = new VBox();
     Scene scene = new Scene(center, 1000, 1000);
-
+    
     Login() {
         //Setting the Title
         this.setTitle("RIS- Radiology Information System (Logging In)");
@@ -59,7 +57,7 @@ public class Login extends Stage {
             public void handle(ActionEvent e) {
                 loginCheck();
             }
-
+            
         });
         inputUsername.setId("textfield");
         inputPassword.setId("textfield");
@@ -79,9 +77,9 @@ public class Login extends Stage {
         //Setting scene appropriately
         scene.getStylesheets().add("file:stylesheet.css");
         this.setScene(scene);
-
+        
     }
-
+    
     private void changeGridPane() {
         //Gridpane does what Gridpane does best
         //Everything's on a grid. 
@@ -107,20 +105,22 @@ public class Login extends Stage {
 //    
     private void loginCheck() {
         String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
-
+        
         String username = inputUsername.getText();
         String password = inputPassword.getText();
         String sql = "Select * FROM users WHERE username = '" + username + "' AND password = '" + password + "' AND enabled = 1;";
-
+        
         try {
             Connection conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
-
-            int userId = rs.getInt(1);
-            String fullName = rs.getString(3);
-            int role = rs.getInt(6);
+            
+            int userId = rs.getInt("user_id");
+            String fullName = rs.getString("full_name");
+            int role = rs.getInt("role");
             App.user = new User(userId, fullName, role);
+            App.user.setEmail(rs.getString("email"));
+            App.user.setUsername(rs.getString("username"));
             //
             rs.close();
             stmt.close();
@@ -138,23 +138,36 @@ public class Login extends Stage {
                 x.show();
                 x.setMaximized(true);
                 this.hide();
-            }else if(App.user.getRole()==4) {
-            	//radiologist
-            	Stage x = new Rad();
-            	x.show();
-            	x.setMaximized(true);
-            	this.hide();
-            }else if (App.user.getRole() == 5) {
+            } else if (App.user.getRole() == 4) {
+                //radiologist
+                Stage x = new Rad();
+                x.show();
+                x.setMaximized(true);
+                this.hide();
+            } else if (App.user.getRole() == 5) {
                 //Referral Doctor
                 Stage x = new ReferralDoctor();
+                x.show();
+                x.setMaximized(true);
+                this.hide();
+            } else if (App.user.getRole() == 6) {
+                
+            } else if (App.user.getRole() == 1) {
+                Stage x = new Administrator();
                 x.show();
                 x.setMaximized(true);
                 this.hide();
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+            Alert a = new Alert(AlertType.INFORMATION);
+            
+            a.setTitle("Error");
+            a.setHeaderText("Try Again");
+            a.setContentText("Username / Password not found. \nPlease contact an administrator if problem persists. ");
+            a.show();
         }
-
+        
     }
-
+    
 }

@@ -48,3 +48,23 @@
 #textfield{
     -fx-background-radius: 30;
 }
+
+#navbar{
+    -fx-background-radius: 0;
+    -fx-alignment: center ;
+    -fx-padding:10;
+    -fx-text-fill: white;
+}
+
+#navbar:hover{
+    -fx-background-color: #9FFFCB;
+    -fx-text-fill: #555555;
+}
+
+#selected {
+    -fx-background-color: #9FFFCB;
+    -fx-text-fill: #555555;
+    -fx-background-radius: 0;
+    -fx-alignment: center ;
+    -fx-padding:10;
+}
