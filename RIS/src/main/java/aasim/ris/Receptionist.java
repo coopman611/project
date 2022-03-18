@@ -7,20 +7,14 @@ package aasim.ris;
 import datastorage.User;
 import datastorage.Appointment;
 import datastorage.Patient;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -37,8 +31,6 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -52,6 +44,8 @@ public class Receptionist extends Stage {
     //Stage Structure
     HBox navbar = new HBox();
     Button logOut = new Button("Log Out");
+    Label username = new Label("Logged In as: " + App.user.getFullName());
+
     BorderPane main = new BorderPane();
     Scene scene = new Scene(main);
     //Table Structure
@@ -83,7 +77,9 @@ public class Receptionist extends Stage {
         //Navbar
         navbar.setAlignment(Pos.TOP_RIGHT);
         logOut.setPrefHeight(30);
-        navbar.getChildren().add(logOut);
+        username.setId("navbar");
+        username.setOnMouseClicked(eh -> userInfo());
+        navbar.getChildren().addAll(username, logOut);
         navbar.setStyle("-fx-background-color: #2f4f4f; -fx-spacing: 15;");
         main.setTop(navbar);
         //End navbar
@@ -262,6 +258,13 @@ public class Receptionist extends Stage {
         this.hide();
     }
 
+    private void userInfo() {
+        Stage x = new UserInfo();
+        x.show();
+        x.setMaximized(true);
+        this.close();
+    }
+
     //On button press, open up a new stage (calls private nested class)
     private void addAppointment() {
         Stage x = new AddAppointment();
@@ -277,6 +280,7 @@ public class Receptionist extends Stage {
         Stage x = new Stage();
         x.setTitle("Update Appointment");
         x.initOwner(this);
+        x.setMaximized(true);
         x.initModality(Modality.WINDOW_MODAL);
         //
         Button updateTime = new Button("Reschedule Appointment");
@@ -292,7 +296,7 @@ public class Receptionist extends Stage {
         Scene scene = new Scene(container);
         x.setScene(scene);
         scene.getStylesheets().add("file:stylesheet.css");
-        //
+        // 
         updateTime.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent e) {
@@ -314,13 +318,26 @@ public class Receptionist extends Stage {
                 submit.setOnAction(new EventHandler<ActionEvent>() {
                     @Override
                     public void handle(ActionEvent e) {
-                        boolean everythingCool = true;
                         //validation here
-                        //end validation
-                        if (everythingCool) {
-                            updateTime(datePicker.getValue().toString() + " " + time.getText(), appt.getApptID());
-                            x.close();
+                        if (datePicker.getValue() == null || !datePicker.getValue().toString().matches("^[0-9]{4}-[0-9]{2}-[0-9]{2}$")) {
+                            Alert a = new Alert(Alert.AlertType.INFORMATION);
+                            a.setTitle("Error");
+                            a.setHeaderText("Try Again");
+                            a.setContentText("Please enter a valid Date. \n(Press enter if you have typed it)");
+                            a.show();
+                            return;
                         }
+                        if (time.getText().isBlank() || !time.getText().matches("^[0-9]+:[0-9]+$")) {
+                            Alert a = new Alert(Alert.AlertType.INFORMATION);
+                            a.setTitle("Error");
+                            a.setHeaderText("Try Again");
+                            a.setContentText("Please enter a valid Time. \n");
+                            a.show();
+                            return;
+                        }
+                        //end validation
+                        updateTime(datePicker.getValue().toString() + " " + time.getText(), appt.getApptID());
+                        x.close();
                     }
 
                 });
@@ -344,10 +361,9 @@ public class Receptionist extends Stage {
                 submit.setOnAction(new EventHandler<ActionEvent>() {
                     @Override
                     public void handle(ActionEvent e) {
-                        boolean everythingCool = true;
                         //validation here
                         //end validation
-                        if (everythingCool) {
+                        if (!dropdown.getValue().toString().isBlank()) {
                             updateStatus(dropdown.getValue().toString(), appt);
                             x.close();
                         }
@@ -384,13 +400,36 @@ public class Receptionist extends Stage {
                 submit.setOnAction(new EventHandler<ActionEvent>() {
                     @Override
                     public void handle(ActionEvent e) {
-                        boolean everythingCool = true;
                         //validation here
-                        //end validation
-                        if (everythingCool) {
-                            updatePatient(new Patient(pat.getPatientID(), email.getText(), pat.getFullName(), pat.getDob(), address.getText(), insurance.getText()));
-                            x.close();
+
+                        if (email.getText().isBlank() || !email.getText().matches("[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?")) {
+                            Alert a = new Alert(Alert.AlertType.INFORMATION);
+                            a.setTitle("Error");
+                            a.setHeaderText("Try Again");
+                            a.setContentText("Please enter a valid Email. \n");
+                            a.show();
+                            return;
                         }
+                        if (address.getText().isBlank()) {
+                            Alert a = new Alert(Alert.AlertType.INFORMATION);
+                            a.setTitle("Error");
+                            a.setHeaderText("Try Again");
+                            a.setContentText("Please enter a valid Address.\n");
+                            a.show();
+                            return;
+                        }
+                        if (insurance.getText().isBlank()) {
+                            Alert a = new Alert(Alert.AlertType.INFORMATION);
+                            a.setTitle("Error");
+                            a.setHeaderText("Try Again");
+                            a.setContentText("Please enter a valid Insurance.\n");
+                            a.show();
+                            return;
+                        }
+
+                        //end validation
+                        updatePatient(new Patient(pat.getPatientID(), email.getText(), pat.getFullName(), pat.getDob(), address.getText(), insurance.getText()));
+                        x.close();
                     }
 
                 });
@@ -516,6 +555,22 @@ public class Receptionist extends Stage {
             check.setOnAction(new EventHandler<ActionEvent>() {
                 @Override
                 public void handle(ActionEvent e) {
+                    if (patFullName.getText().isBlank() || !patFullName.getText().matches("^(\\w+\\s+\\w+ ?)$")) {
+                        Alert a = new Alert(Alert.AlertType.INFORMATION);
+                        a.setTitle("Error");
+                        a.setHeaderText("Try Again");
+                        a.setContentText("Please enter a valid full name. \n");
+                        a.show();
+                        return;
+                    }
+                    if (patEmail.getText().isBlank() || !patEmail.getText().matches("[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?")) {
+                        Alert a = new Alert(Alert.AlertType.INFORMATION);
+                        a.setTitle("Error");
+                        a.setHeaderText("Try Again");
+                        a.setContentText("Please enter a valid Email. \n");
+                        a.show();
+                        return;
+                    }
                     pat = pullPatientInfo(patFullName.getText(), patEmail.getText());
                     if (pat != null) {
                         check.setVisible(false);
@@ -547,6 +602,13 @@ public class Receptionist extends Stage {
                             }
                         });
 
+                    } else {
+                        Alert a = new Alert(Alert.AlertType.INFORMATION);
+                        a.setTitle("Error");
+                        a.setHeaderText("Try Again");
+                        a.setContentText("Patient not found\nPlease verify all information or contact the patient's Referral Doctor\n");
+                        a.show();
+                        return;
                     }
                 }
 
@@ -555,11 +617,25 @@ public class Receptionist extends Stage {
             submit.setOnAction(new EventHandler<ActionEvent>() {
                 @Override
                 public void handle(ActionEvent e) {
-                    boolean everythingCool = true;
-                    if (everythingCool) {
-                        insertAppointment(pat.getPatientID(), orders, datePicker.getValue().toString() + " " + time.getText());
-
+                    if (datePicker.getValue() == null || !datePicker.getValue().toString().matches("^[0-9]{4}-[0-9]{2}-[0-9]{2}$")) {
+                        Alert a = new Alert(Alert.AlertType.INFORMATION);
+                        a.setTitle("Error");
+                        a.setHeaderText("Try Again");
+                        a.setContentText("Please enter a valid Date of Birth. \n(Press enter if you have typed it)");
+                        a.show();
+                        return;
                     }
+
+                    if (time.getText().isBlank() || !time.getText().matches("^[0-9]+:[0-9]+$")) {
+                        Alert a = new Alert(Alert.AlertType.INFORMATION);
+                        a.setTitle("Error");
+                        a.setHeaderText("Try Again");
+                        a.setContentText("Please enter a valid Time. \n");
+                        a.show();
+                        return;
+                    }
+
+                    insertAppointment(pat.getPatientID(), orders, datePicker.getValue().toString() + " " + time.getText());
                 }
             });
 
