@@ -204,6 +204,7 @@ public class App extends Application {
 
     }
 
+
     public static void createImageTable(String fileName) {
         String url = "jdbc:sqlite:C://sqlite/" + fileName;
         String sql = "CREATE TABLE images (\n"
@@ -247,6 +248,8 @@ public class App extends Application {
             System.out.println(e.getMessage());
         }
     }
+    
+
 
     public static void populateTablesReceptionist(String fileName) {
         String sql = "INSERT INTO users(email, full_name, username, password, role) VALUES ('exampleemail@gmail.com', 'Sadie Greenhorn', 'receptionist', 'receptionist', '2');\n";

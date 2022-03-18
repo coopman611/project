@@ -241,6 +241,7 @@ public class Rad extends Stage {
             @Override
             public void handle(ActionEvent t) {
                 openFile(report, patID, apptId, order);
+                //completeOrder(patID, apptId);
                 
             }
         });
@@ -265,12 +266,29 @@ public class Rad extends Stage {
         Button confirm = new Button("Confirm");
         confirm.setId("complete");
         
+       // Button viewImg = new Button("View Image");
+        //viewImg.setId("View Image");
+        
+        VBox imgContainer = new VBox();
+        ArrayList<Image> list = retrieveUploadedImages(patID, apptId);
+        if (list.isEmpty()) {
+            System.out.println("Error, image list is empty");
+        } else {
+            for (Image i : list) {
+                ImageView temp = new ImageView(i);
+                imgContainer.getChildren().add(temp);
+            }
+        }
+        ScrollPane s1 = new ScrollPane();
+        s1.setContent(imgContainer);
+        
+        
         TextArea reportText = new TextArea();
         reportText.getText();
         
         Button cancel = new Button("Cancel");
         cancel.setId("cancel");
-        HBox btnContainer = new HBox(cancel, reportText, confirm);
+        HBox btnContainer = new HBox(cancel, reportText, confirm, s1);
         btnContainer.setSpacing(25);
         y.getStylesheets().add("file:stylesheet.css");
         x.setScene(new Scene(y));
@@ -281,6 +299,14 @@ public class Rad extends Stage {
                 x.close();
             }
         });
+       /* 
+        viewImg.setOnAction(new EventHandler<ActionEvent>() {
+        	@Override
+        	public void handle(ActionEvent e) {
+        		completeOrder(patID, apptId);
+        	}
+        });
+        */
         confirm.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent e) {
@@ -292,6 +318,9 @@ public class Rad extends Stage {
         VBox container = new VBox(label, btnContainer);
         y.setCenter(container);
         x.show();
+        
+        
+        
     }
     
     private void addReportToDatabase(String report, int patID, int apptId, String order) {
@@ -317,7 +346,7 @@ public class Rad extends Stage {
         x.setMaximized(true);
         x.initModality(Modality.WINDOW_MODAL);
         BorderPane y = new BorderPane();
-        Label label = new Label("You are uploading the images: ");
+        Label label = new Label("Order images:");
         //Images
         VBox imgContainer = new VBox();
         ArrayList<Image> list = retrieveUploadedImages(patID, apptId);
@@ -332,11 +361,10 @@ public class Rad extends Stage {
         ScrollPane s1 = new ScrollPane();
         s1.setContent(imgContainer);
         //End Images
-        Button confirm = new Button("Confirm");
-        confirm.setId("complete");
-        Button cancel = new Button("Cancel");
-        cancel.setId("cancel");
-        HBox btnContainer = new HBox(cancel, confirm);
+
+        Button cancel = new Button("Close");
+        cancel.setId("Close");
+        HBox btnContainer = new HBox(cancel);
         btnContainer.setSpacing(25);
         VBox container = new VBox(label, s1, btnContainer);
         y.setCenter(container);
@@ -351,15 +379,14 @@ public class Rad extends Stage {
             }
         });
         
-        confirm.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent e) {
-                updateAppointmentStatus(patID, apptId);
-                x.close();
-                radOne();
-            }
-            
-        });
+		/*
+		 * confirm.setOnAction(new EventHandler<ActionEvent>() {
+		 * 
+		 * @Override public void handle(ActionEvent e) { updateAppointmentStatus(patID,
+		 * apptId); x.close(); radOne(); }
+		 * 
+		 * });
+		 */
     }
     
     private ArrayList<Image> retrieveUploadedImages(int patID, int apptId) {
