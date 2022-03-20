@@ -7,6 +7,9 @@
 .button:hover{
     -fx-background-color: #9FFFCB;
 }
+.label{
+    -fx-padding: 10;
+}
 /*Choice Box*/
 .choice-box{
     -fx-background-color: #7AE582;

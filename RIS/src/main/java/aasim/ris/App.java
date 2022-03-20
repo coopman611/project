@@ -30,7 +30,7 @@ public class App extends Application {
 
     }
 
-    public static void main(String[] args) {
+    public static void main1(String[] args) {
         //Create
         createDatabase(fileName);
         createAndPopulateTables(fileName);
@@ -42,7 +42,7 @@ public class App extends Application {
         createImageTable(fileName);
         createDocPatientConnectorTable(fileName);
         createRadReportTable(fileName);
-//        Populate
+////        Populate
         populateTablesStatus(fileName);
         populateTablesAdmin(fileName);
 //////        Duplication bug if you run these multiple times, leave commented out
@@ -134,7 +134,6 @@ public class App extends Application {
     }
 
     public static void createPatientTable(String fileName) {
-        String url = "jdbc:sqlite:C://sqlite/" + fileName;
         String sql = "CREATE TABLE patients (\n"
                 + "	patientID INTEGER PRIMARY KEY ,\n"
                 + "	email VARCHAR(45) NOT NULL,\n"
@@ -144,82 +143,64 @@ public class App extends Application {
                 + "     insurance VARCHAR(64) NOT NULL, \n"
                 + "     UNIQUE(email, full_name)"
                 + ");";
-        try {
-            Connection conn = DriverManager.getConnection(url);
-            Statement stmt = conn.createStatement();
-            stmt.execute(sql);
-            stmt.close();
-            conn.close();
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
+        executeSQLStatement(sql);
+
+        sql = "CREATE TABLE patientAlerts ("
+                + " alertID INTEGER PRIMARY KEY, "
+                + " alert TEXT UNIQUE NOT NULL "
+                + ");";
+        executeSQLStatement(sql);
+
+        sql = "CREATE TABLE flags ("
+                + " alertID INTEGER, "
+                + " orderID INTEGER, "
+                + " UNIQUE(alertID, orderID) "
+                + ");";
+        executeSQLStatement(sql);
+
+        sql = "CREATE TABLE alertsPatientConnector ("
+                + " patientID INTEGER, "
+                + " alertID INTEGER, "
+                + " UNIQUE(patientID, alertID) "
+                + ");";
+        executeSQLStatement(sql);
 
     }
 
     public static void createStatusCodesTable(String fileName) {
-        String url = "jdbc:sqlite:C://sqlite/" + fileName;
         String sql = "CREATE TABLE statusCode (\n"
                 + "	statusID INTEGER PRIMARY KEY,\n"
                 + "	status VARCHAR(45)\n"
                 + ");";
-        try {
-            Connection conn = DriverManager.getConnection(url);
-            Statement stmt = conn.createStatement();
-            stmt.execute(sql);
-            stmt.close();
-            conn.close();
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-
+        executeSQLStatement(sql);
     }
 
     public static void createOrderCodesTable(String fileName) {
         String sql = "CREATE TABLE orderCodes (\n"
                 + "	orderID INTEGER PRIMARY KEY,\n"
-                + "	orders VARCHAR(45), \n"
-                + "     UNIQUE(orderID, orders) "
+                + "	orders VARCHAR(45) UNIQUE \n"
+                + "     "
                 + ");";
         executeSQLStatement(sql);
     }
 
     public static void createOrdersTable(String fileName) {
-        String url = "jdbc:sqlite:C://sqlite/" + fileName;
         String sql = "CREATE TABLE patientOrders (\n"
                 + "	patientID INTEGER ,\n"
                 + "     orderCodeID INTEGER NOT NULL ,\n"
                 + "     enabled INTEGER DEFAULT 1\n" //1 = YES, 0 = FALSE
                 + ");";
-        try {
-            Connection conn = DriverManager.getConnection(url);
-            Statement stmt = conn.createStatement();
-            stmt.execute(sql);
-            stmt.close();
-            conn.close();
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-
+        executeSQLStatement(sql);
     }
 
     public static void createImageTable(String fileName) {
-        String url = "jdbc:sqlite:C://sqlite/" + fileName;
         String sql = "CREATE TABLE images (\n"
                 + "	imageID INTEGER PRIMARY KEY,\n"
                 + "	patientID INTEGER,\n"
                 + "	apptID INTEGER,\n"
                 + "	image BLOB\n"
                 + ");";
-        try {
-            Connection conn = DriverManager.getConnection(url);
-            Statement stmt = conn.createStatement();
-            stmt.execute(sql);
-            stmt.close();
-            conn.close();
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-
+        executeSQLStatement(sql);
     }
 
     public static void createRadReportTable(String fileName) {

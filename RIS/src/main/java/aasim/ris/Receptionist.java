@@ -6,7 +6,9 @@ package aasim.ris;
  */
 import datastorage.User;
 import datastorage.Appointment;
+import datastorage.InputValidation;
 import datastorage.Patient;
+import datastorage.PatientAlert;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -17,6 +19,7 @@ import java.util.List;
 import javafx.collections.FXCollections;
 import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -27,6 +30,7 @@ import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
@@ -323,20 +327,10 @@ public class Receptionist extends Stage {
                     @Override
                     public void handle(ActionEvent e) {
                         //validation here
-                        if (datePicker.getValue() == null || !datePicker.getValue().toString().matches("^[0-9]{4}-[0-9]{2}-[0-9]{2}$")) {
-                            Alert a = new Alert(Alert.AlertType.INFORMATION);
-                            a.setTitle("Error");
-                            a.setHeaderText("Try Again");
-                            a.setContentText("Please enter a valid Date. \n(Press enter if you have typed it)");
-                            a.show();
+                        if (!InputValidation.validateDate(datePicker.getValue().toString())) {
                             return;
                         }
-                        if (time.getText().isBlank() || !time.getText().matches("^[0-9]+:[0-9]+$")) {
-                            Alert a = new Alert(Alert.AlertType.INFORMATION);
-                            a.setTitle("Error");
-                            a.setHeaderText("Try Again");
-                            a.setContentText("Please enter a valid Time. \n");
-                            a.show();
+                        if (!InputValidation.validateTime(time.getText())) {
                             return;
                         }
                         //end validation
@@ -353,7 +347,7 @@ public class Receptionist extends Stage {
                 container.getChildren().clear();
 
                 ComboBox dropdown = new ComboBox();
-                dropdown.getItems().addAll("Patient Did Not Show", "Appointment Scheduled", "Patient Checked In", "Patient recieved by Technician", "Patient Cancelled", "Faculty Cancelled");
+                dropdown.getItems().addAll("Patient Did Not Show", "Appointment Scheduled", "Patient Checked In", "Patient received by Technician", "Patient Cancelled", "Faculty Cancelled");
 
                 dropdown.setValue(appt.getStatus());
                 Button submit = new Button("Submit");
@@ -378,70 +372,202 @@ public class Receptionist extends Stage {
         updatePatient.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent e) {
-                container.getChildren().clear();
+
                 Patient pat = pullPatientInfo(appt.getPatientID());
-                Label txtName = new Label("Patient Name: ");
-                Label name = new Label(pat.getFullName());
-
-                Label txtEmail = new Label("Patient Email: ");
-                TextField email = new TextField(pat.getEmail());
-
-                Label txtAddress = new Label("Patient Address: ");
-                TextField address = new TextField(pat.getAddress());
-
-                Label txtInsurance = new Label("Patient Insurance: ");
-                TextField insurance = new TextField(pat.getInsurance());
-
-                Button submit = new Button("Submit");
-                submit.setId("complete");
-
-                HBox hidden = new HBox(txtName, name, txtEmail, email);
-                HBox hidden1 = new HBox(txtAddress, address, txtInsurance, insurance);
-
-                hidden.setSpacing(15);
-                container.getChildren().addAll(hidden, hidden1, submit);
-                container.setSpacing(15);
-                submit.setOnAction(new EventHandler<ActionEvent>() {
-                    @Override
-                    public void handle(ActionEvent e) {
-                        //validation here
-
-                        if (email.getText().isBlank() || !email.getText().matches("[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?")) {
-                            Alert a = new Alert(Alert.AlertType.INFORMATION);
-                            a.setTitle("Error");
-                            a.setHeaderText("Try Again");
-                            a.setContentText("Please enter a valid Email. \n");
-                            a.show();
-                            return;
-                        }
-                        if (address.getText().isBlank()) {
-                            Alert a = new Alert(Alert.AlertType.INFORMATION);
-                            a.setTitle("Error");
-                            a.setHeaderText("Try Again");
-                            a.setContentText("Please enter a valid Address.\n");
-                            a.show();
-                            return;
-                        }
-                        if (insurance.getText().isBlank()) {
-                            Alert a = new Alert(Alert.AlertType.INFORMATION);
-                            a.setTitle("Error");
-                            a.setHeaderText("Try Again");
-                            a.setContentText("Please enter a valid Insurance.\n");
-                            a.show();
-                            return;
-                        }
-
-                        //end validation
-                        updatePatient(new Patient(pat.getPatientID(), email.getText(), pat.getFullName(), pat.getDob(), address.getText(), insurance.getText()));
-                        x.close();
-                    }
-
-                });
+                x.close();
+                updatePatient(pat);
             }
         });
 
         x.showAndWait();
         populateTable();
+    }
+
+    private void updatePatient(Patient z) {
+        ArrayList<PatientAlert> paList = populatePaList();
+        ArrayList<PatientAlert> allergies = populateAllergies(z);
+
+        VBox container = new VBox();
+        Stage x = new Stage();
+        x.initOwner(this);
+        x.initModality(Modality.WINDOW_MODAL);
+        x.setTitle("Update Patient");
+        Scene scene = new Scene(container);
+        x.setScene(scene);
+        x.setHeight(400);
+        x.setWidth(300);
+        scene.getStylesheets().add("file:stylesheet.css");
+        //
+        Label emailLabel = new Label("Email: ");
+        TextField email = new TextField(z.getEmail());
+        HBox emailContainer = new HBox(emailLabel, email);
+
+        Label addressLabel = new Label("Address: ");
+        TextField address = new TextField(z.getAddress());
+        HBox addressContainer = new HBox(addressLabel, address);
+
+        Label insuranceLabel = new Label("Insurance: ");
+        TextField insurance = new TextField(z.getInsurance());
+        HBox insuranceContainer = new HBox(insuranceLabel, insurance);
+
+        Button submit = new Button("Submit");
+        submit.setId("complete");
+
+        ArrayList<PatientAlert> alertsToAddForThisPatient = new ArrayList<PatientAlert>();
+        ArrayList<PatientAlert> alertsToRemoveForThisPatient = new ArrayList<PatientAlert>();
+        VBox patientAlertContainer = new VBox();
+        for (PatientAlert a : paList) {
+            Label label = new Label(a.getAlert());
+            ComboBox dropdown = new ComboBox();
+            dropdown.getItems().addAll("Yes", "No");
+            if (allergies.contains(a)) {
+                dropdown.setValue("Yes");
+            } else {
+                dropdown.setValue("No");
+            }
+            HBox temp = new HBox(label, dropdown);
+            temp.setSpacing(10);
+            temp.setPadding(new Insets(10));
+
+            patientAlertContainer.getChildren().add(temp);
+
+            dropdown.setOnAction(new EventHandler() {
+                @Override
+                public void handle(Event eh) {
+                    if (dropdown.getValue().toString().equals("Yes")) {
+                        alertsToAddForThisPatient.add(a);
+                        alertsToRemoveForThisPatient.remove(a);
+                    } else if (dropdown.getValue().toString().equals("No")) {
+                        alertsToAddForThisPatient.remove(a);
+                        alertsToRemoveForThisPatient.add(a);
+                    }
+                }
+            });
+        }
+
+        ScrollPane s1 = new ScrollPane(patientAlertContainer);
+        s1.setPrefHeight(200);
+
+        container.getChildren().addAll(emailContainer, addressContainer, insuranceContainer, s1, submit);
+        x.show();
+
+        submit.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent eh) {
+                //Validation
+                if (!InputValidation.validateEmail(email.getText())) {
+                    return;
+                }
+                if (!InputValidation.validateAddress(address.getText())) {
+                    return;
+                }
+                if (!InputValidation.validateInsurance(insurance.getText())) {
+                    return;
+                }
+                //End Validation
+                z.setAddress(address.getText());
+                z.setEmail(email.getText());
+                z.setInsurance(insurance.getText());
+                String sql = "UPDATE patients SET email = '" + email.getText() + "', address = '" + address.getText() + "', insurance = '" + insurance.getText() + "';";
+                App.executeSQLStatement(sql);
+                for (PatientAlert a : alertsToAddForThisPatient) {
+                    sql = "INSERT INTO alertsPatientConnector VALUES ( '" + z.getPatientID() + "', '" + a.getAlertID() + "');";
+                    App.executeSQLStatement(sql);
+                }
+                for (PatientAlert a : alertsToRemoveForThisPatient) {
+                    sql = "DELETE FROM alertsPatientConnector WHERE patientID = '" + z.getPatientID() + "' AND alertID = '" + a.getAlertID() + "';";
+                    App.executeSQLStatement(sql);
+                }
+                x.close();
+            }
+        });
+    }
+
+    private ArrayList<PatientAlert> populatePaList() {
+        ArrayList<PatientAlert> paList = new ArrayList<>();
+        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
+        String sql = "Select patientAlerts.alertID, patientAlerts.alert "
+                + " FROM patientAlerts "
+                + " "
+                + " ;";
+
+        try {
+            Connection conn = DriverManager.getConnection(url);
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+            //
+
+            while (rs.next()) {
+                PatientAlert pa = new PatientAlert(rs.getInt("alertID"), rs.getString("alert"), getFlagsFromDatabase(rs.getInt("alertID")));
+                paList.add(pa);
+            }
+            //
+            rs.close();
+            stmt.close();
+            conn.close();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return paList;
+    }
+
+    private ArrayList<PatientAlert> populateAllergies(Patient z) {
+        ArrayList<PatientAlert> allergies = new ArrayList<>();
+        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
+        String sql = "Select patientAlerts.alertID, patientAlerts.alert "
+                + " FROM patientAlerts "
+                + " INNER JOIN alertsPatientConnector ON patientAlerts.alertID = alertsPatientConnector.alertID "
+                + " WHERE alertsPatientConnector.patientID = '" + z.getPatientID() + "'"
+                + ";";
+
+        try {
+            Connection conn = DriverManager.getConnection(url);
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+            //
+
+            while (rs.next()) {
+                PatientAlert pa = new PatientAlert(rs.getInt("alertID"), rs.getString("alert"), getFlagsFromDatabase(rs.getInt("alertID")));
+                allergies.add(pa);
+            }
+            //
+            rs.close();
+            stmt.close();
+            conn.close();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return allergies;
+    }
+
+    private String getFlagsFromDatabase(int aInt) {
+
+        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
+        String val = "";
+        String sql = "Select orderCodes.orders "
+                + " FROM flags "
+                + " INNER JOIN orderCodes ON flags.orderID = orderCodes.orderID "
+                + " WHERE alertID = '" + aInt + "' "
+                + ";";
+
+        try {
+            Connection conn = DriverManager.getConnection(url);
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+            //
+            List<PatientAlert> list = new ArrayList<PatientAlert>();
+            while (rs.next()) {
+                //What I receieve:  patientID, email, full_name, dob, address, insurance
+                val += rs.getString("orders") + ", ";
+            }
+            //
+            rs.close();
+            stmt.close();
+            conn.close();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return val;
     }
 
     private Patient pullPatientInfo(int patID) {
@@ -468,13 +594,6 @@ public class Receptionist extends Stage {
             System.out.println(e.getMessage());
         }
         return temp;
-    }
-
-    private void updatePatient(Patient patient) {
-        String sql = "UPDATE patients "
-                + " SET email = '" + patient.getEmail() + "', address = '" + patient.getAddress() + "', insurance = '" + patient.getInsurance() + "' "
-                + " WHERE patientID = '" + patient.getPatientID() + "';";
-        App.executeSQLStatement(sql);
     }
 
     private void updateTime(String string, int apptID) {
@@ -559,20 +678,10 @@ public class Receptionist extends Stage {
             check.setOnAction(new EventHandler<ActionEvent>() {
                 @Override
                 public void handle(ActionEvent e) {
-                    if (patFullName.getText().isBlank() || !patFullName.getText().matches("^(\\w+\\s+\\w+ ?)$")) {
-                        Alert a = new Alert(Alert.AlertType.INFORMATION);
-                        a.setTitle("Error");
-                        a.setHeaderText("Try Again");
-                        a.setContentText("Please enter a valid full name. \n");
-                        a.show();
+                    if (!InputValidation.validateName(patFullName.getText())) {
                         return;
                     }
-                    if (patEmail.getText().isBlank() || !patEmail.getText().matches("[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?")) {
-                        Alert a = new Alert(Alert.AlertType.INFORMATION);
-                        a.setTitle("Error");
-                        a.setHeaderText("Try Again");
-                        a.setContentText("Please enter a valid Email. \n");
-                        a.show();
+                    if (!InputValidation.validateEmail(patEmail.getText())) {
                         return;
                     }
                     pat = pullPatientInfo(patFullName.getText(), patEmail.getText());
@@ -621,24 +730,12 @@ public class Receptionist extends Stage {
             submit.setOnAction(new EventHandler<ActionEvent>() {
                 @Override
                 public void handle(ActionEvent e) {
-                    if (datePicker.getValue() == null || !datePicker.getValue().toString().matches("^[0-9]{4}-[0-9]{2}-[0-9]{2}$")) {
-                        Alert a = new Alert(Alert.AlertType.INFORMATION);
-                        a.setTitle("Error");
-                        a.setHeaderText("Try Again");
-                        a.setContentText("Please enter a valid Date of Birth. \n(Press enter if you have typed it)");
-                        a.show();
+                    if (!InputValidation.validateDate(datePicker.getValue().toString())) {
                         return;
                     }
-
-                    if (time.getText().isBlank() || !time.getText().matches("^[0-9]+:[0-9]+$")) {
-                        Alert a = new Alert(Alert.AlertType.INFORMATION);
-                        a.setTitle("Error");
-                        a.setHeaderText("Try Again");
-                        a.setContentText("Please enter a valid Time. \n");
-                        a.show();
+                    if (!InputValidation.validateTime(time.getText())) {
                         return;
                     }
-
                     insertAppointment(pat.getPatientID(), orders, datePicker.getValue().toString() + " " + time.getText());
                 }
             });
