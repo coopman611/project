@@ -261,7 +261,7 @@ public class ReferralDoctor extends Stage {
         ArrayList<PatientAlert> alertsToAddForThisPatient = new ArrayList<PatientAlert>();
         VBox patientAlertContainer = new VBox();
         ArrayList<HBox> hbox = new ArrayList<HBox>();
-        for (int i = 0; i < paList.size() / 2; i++) {
+        for (int i = 0; i < (paList.size() / 2) + 1; i++) {
             hbox.add(new HBox());
         }
         int counter = 0;
@@ -495,7 +495,7 @@ public class ReferralDoctor extends Stage {
 //
         VBox patientAlertContainer = new VBox();
         ArrayList<HBox> hbox = new ArrayList<HBox>();
-        for (int i = 0; i < paList.size() / 5; i++) {
+        for (int i = 0; i < (paList.size() / 5) + 1; i++) {
             hbox.add(new HBox());
         }
         int counter = 0;
