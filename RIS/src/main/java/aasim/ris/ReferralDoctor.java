@@ -260,7 +260,17 @@ public class ReferralDoctor extends Stage {
         //
         ArrayList<PatientAlert> alertsToAddForThisPatient = new ArrayList<PatientAlert>();
         VBox patientAlertContainer = new VBox();
+        ArrayList<HBox> hbox = new ArrayList<HBox>();
+        for (int i = 0; i < paList.size() / 2; i++) {
+            hbox.add(new HBox());
+        }
+        int counter = 0;
+        int hboxCounter = 0;
         for (PatientAlert z : paList) {
+            if (counter > 2) {
+                hboxCounter++;
+                counter = 0;
+            }
             Label label = new Label(z.getAlert());
             ComboBox dropdown = new ComboBox();
             dropdown.getItems().addAll("Yes", "No");
@@ -270,7 +280,7 @@ public class ReferralDoctor extends Stage {
             temp.setSpacing(10);
             temp.setPadding(new Insets(10));
 
-            patientAlertContainer.getChildren().add(temp);
+            hbox.get(hboxCounter).getChildren().add(temp);
 
             dropdown.setOnAction(new EventHandler() {
                 @Override
@@ -282,7 +292,10 @@ public class ReferralDoctor extends Stage {
                     }
                 }
             });
-
+            counter++;
+        }
+        for (HBox cont : hbox) {
+            patientAlertContainer.getChildren().add(cont);
         }
         //
         ScrollPane s1 = new ScrollPane(patientAlertContainer);
@@ -481,7 +494,17 @@ public class ReferralDoctor extends Stage {
 //
 //
         VBox patientAlertContainer = new VBox();
+        ArrayList<HBox> hbox = new ArrayList<HBox>();
+        for (int i = 0; i < paList.size() / 5; i++) {
+            hbox.add(new HBox());
+        }
+        int counter = 0;
+        int hboxCounter = 0;
         for (PatientAlert i : allergies) {
+            if (counter > 5) {
+                counter = 0;
+                hboxCounter++;
+            }
             Label label = new Label(i.getAlert());
             ComboBox dropdown = new ComboBox();
             dropdown.getItems().addAll("Yes");
@@ -491,20 +514,12 @@ public class ReferralDoctor extends Stage {
             temp.setSpacing(10);
             temp.setPadding(new Insets(10));
 
-            patientAlertContainer.getChildren().add(temp);
+            hbox.get(hboxCounter).getChildren().add(temp);
+            counter++;
+        }
 
-//            dropdown.setOnAction(new EventHandler() {
-//                @Override
-//                public void handle(Event eh) {
-//                    if (dropdown.getValue().toString().equals("Yes")) {
-//                        String sql = "INSERT INTO alertsPatientConnector VALUES ( '" + z.getPatientID() + "' , '" + i.getAlertID() + "');";
-//                        App.executeSQLStatement(sql);
-//                    } else if (dropdown.getValue().toString().equals("No")) {
-//                        String sql = "DELETE FROM alertsPatientConnector WHERE patientID = '" + z.getPatientID() + "' AND alertID = '" + i.getAlertID() + "';";
-//                        App.executeSQLStatement(sql);
-//                    }
-//                }
-//            });
+        for (HBox cont : hbox) {
+            patientAlertContainer.getChildren().add(cont);
         }
         ScrollPane s1 = new ScrollPane(patientAlertContainer);
         s1.setPrefHeight(200);
