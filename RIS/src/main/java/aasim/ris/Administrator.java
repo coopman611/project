@@ -1,8 +1,10 @@
 package aasim.ris;
 
 import datastorage.Appointment;
+import datastorage.InputValidation;
 import datastorage.Order;
 import datastorage.Patient;
+import datastorage.PatientAlert;
 import datastorage.User;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -41,28 +43,26 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 public class Administrator extends Stage {
-    //Navbar
 
+    //Navbar
     HBox navbar = new HBox();
     Label username = new Label("Logged In as: " + App.user.getFullName());
     ImageView pfp = new ImageView(App.user.getPfp());
-
     Label users = new Label("Users");
     Label patients = new Label("Patients");
     Label appointments = new Label("Appointments");
     Label modalities = new Label("Modalities");
+    Label patientAlerts = new Label("Patient Alerts");
     Button logOut = new Button("Log Out");
-
     //End Navbar
+
     //table
-    TableView usersTable = new TableView();
+    TableView table = new TableView();
     VBox usersContainer = new VBox();
-    TableView patientsTable = new TableView();
     VBox patientsContainer = new VBox();
-    TableView appointmentsTable = new TableView();
     VBox appointmentsContainer = new VBox();
-    TableView modalitiesTable = new TableView();
     VBox modalitiesContainer = new VBox();
+    VBox patientAlertsContainer = new VBox();
     //
     //Scene
     BorderPane main = new BorderPane();
@@ -88,7 +88,7 @@ public class Administrator extends Stage {
         pfp.setFitHeight(38);
         username.setId("navbar");
         username.setOnMouseClicked(eh -> userInfo());
-        HBox navButtons = new HBox(users, patients, appointments, modalities);
+        HBox navButtons = new HBox(users, patients, appointments, modalities, patientAlerts);
         navButtons.setAlignment(Pos.TOP_LEFT);
 //        navButtons.setSpacing(10);
         HBox.setHgrow(navButtons, Priority.ALWAYS);
@@ -100,6 +100,7 @@ public class Administrator extends Stage {
         patients.setId("navbar");
         appointments.setId("navbar");
         modalities.setId("navbar");
+        patientAlerts.setId("navbar");
         //End navbar
 
         //Center
@@ -109,6 +110,8 @@ public class Administrator extends Stage {
         patients.setOnMouseClicked(eh -> patientsPageView());
         appointments.setOnMouseClicked(eh -> appointmentsPageView());
         modalities.setOnMouseClicked(eh -> modalitiesPageView());
+        patientAlerts.setOnMouseClicked(eh -> patientAlertsPageView());
+
         //End Center
         //Set Scene and Structure
         scene.getStylesheets().add("file:stylesheet.css");
@@ -132,7 +135,7 @@ public class Administrator extends Stage {
 
 //<editor-fold defaultstate="collapsed" desc="Users Section">
     private void createTableUsers() {
-        usersTable.getColumns().clear();
+        table.getColumns().clear();
         //All of the Columns
         TableColumn pfpCol = new TableColumn("PFP");
         TableColumn userIDCol = new TableColumn("User ID");
@@ -154,22 +157,22 @@ public class Administrator extends Stage {
         buttonCol.setCellValueFactory(new PropertyValueFactory<>("placeholder"));
 
         //Couldn't put all the styling
-        pfpCol.prefWidthProperty().bind(usersTable.widthProperty().multiply(0.05));
-        userIDCol.prefWidthProperty().bind(usersTable.widthProperty().multiply(0.05));
-        emailCol.prefWidthProperty().bind(usersTable.widthProperty().multiply(0.2));
-        fullNameCol.prefWidthProperty().bind(usersTable.widthProperty().multiply(0.2));
-        usernameCol.prefWidthProperty().bind(usersTable.widthProperty().multiply(0.2));
-        roleCol.prefWidthProperty().bind(usersTable.widthProperty().multiply(0.1));
-        enabledCol.prefWidthProperty().bind(usersTable.widthProperty().multiply(0.05));
-        buttonCol.prefWidthProperty().bind(usersTable.widthProperty().multiply(0.1));
-        usersTable.setStyle("-fx-background-color: #25A18E; -fx-text-fill: WHITE; ");
+        pfpCol.prefWidthProperty().bind(table.widthProperty().multiply(0.05));
+        userIDCol.prefWidthProperty().bind(table.widthProperty().multiply(0.05));
+        emailCol.prefWidthProperty().bind(table.widthProperty().multiply(0.2));
+        fullNameCol.prefWidthProperty().bind(table.widthProperty().multiply(0.2));
+        usernameCol.prefWidthProperty().bind(table.widthProperty().multiply(0.2));
+        roleCol.prefWidthProperty().bind(table.widthProperty().multiply(0.1));
+        enabledCol.prefWidthProperty().bind(table.widthProperty().multiply(0.05));
+        buttonCol.prefWidthProperty().bind(table.widthProperty().multiply(0.1));
+        table.setStyle("-fx-background-color: #25A18E; -fx-text-fill: WHITE; ");
         //Together again
-        usersTable.getColumns().addAll(pfpCol, userIDCol, emailCol, fullNameCol, usernameCol, roleCol, enabledCol, buttonCol);
+        table.getColumns().addAll(pfpCol, userIDCol, emailCol, fullNameCol, usernameCol, roleCol, enabledCol, buttonCol);
         //Add Status Update Column:
     }
 
     private void populateUsersTable() {
-        usersTable.getItems().clear();
+        table.getItems().clear();
         //Connect to database
         String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
         String sql = "Select users.user_id, users.email, users.full_name, users.username, users.enabled, users.pfp, roles.role as roleID"
@@ -199,7 +202,7 @@ public class Administrator extends Stage {
                 z.placeholder.setOnAction(eh -> updateUser(z));
             }
             flUsers = new FilteredList(FXCollections.observableList(list), p -> true);
-            usersTable.getItems().addAll(flUsers);
+            table.getItems().addAll(flUsers);
             //
             rs.close();
             stmt.close();
@@ -219,12 +222,14 @@ public class Administrator extends Stage {
         Button addUser = new Button("Add User");
         HBox buttonContainer = new HBox(addUser);
         buttonContainer.setSpacing(10);
-        usersContainer.getChildren().addAll(usersTable, buttonContainer);
+        usersContainer.getChildren().addAll(table, buttonContainer);
         usersContainer.setSpacing(10);
         users.setId("selected");
         patients.setId("navbar");
         appointments.setId("navbar");
         modalities.setId("navbar");
+        patientAlerts.setId("navbar");
+
         //
         //Searchbar Structure
         ChoiceBox<String> choiceBox = new ChoiceBox();
@@ -249,8 +254,8 @@ public class Administrator extends Stage {
             if (choiceBox.getValue().equals("Role")) {
                 flUsers.setPredicate(p -> p.getRoleVal().toLowerCase().contains(newValue.toLowerCase()));//filter table by Date/Time
             }
-            usersTable.getItems().clear();
-            usersTable.getItems().addAll(flUsers);
+            table.getItems().clear();
+            table.getItems().addAll(flUsers);
         });
         buttonContainer.getChildren().add(searchContainer);
 
@@ -289,27 +294,16 @@ public class Administrator extends Stage {
         submit.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent eh) {
-                if (name.getText().isBlank() || !name.getText().matches("^(\\w+\\s+\\w+ ?)$")) {
-                    Alert a = new Alert(Alert.AlertType.INFORMATION);
-                    a.setTitle("Error");
-                    a.setHeaderText("Try Again");
-                    a.setContentText("Please enter a valid full name. \n");
-                    a.show();
+                if (!InputValidation.validateName(name.getText())) {
                     return;
                 }
-
-                if (email.getText().isBlank() || !email.getText().matches("[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?")) {
-                    Alert a = new Alert(Alert.AlertType.INFORMATION);
-                    a.setTitle("Error");
-                    a.setHeaderText("Try Again");
-                    a.setContentText("Please enter a valid Email. \n");
-                    a.show();
+                if (!InputValidation.validateEmail(email.getText())) {
                     return;
                 }
-
                 insertUserIntoDatabase(email.getText(), name.getText(), username.getText(), password.getText(), role.getValue().toString());
                 usersPageView();
                 x.close();
+
             }
         });
     }
@@ -369,18 +363,14 @@ public class Administrator extends Stage {
             }
 
             private void updateEmail() {
-                if (input.getText().isBlank() || !input.getText().matches("[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?")) {
-                    Alert a = new Alert(Alert.AlertType.INFORMATION);
-                    a.setTitle("Error");
-                    a.setHeaderText("Try Again");
-                    a.setContentText("Please enter a valid Email. \n");
-                    a.show();
-                    return;
+                boolean allCool = true;
+                allCool = InputValidation.validateEmail(input.getText());
+                if (allCool) {
+                    String sql = "UPDATE users SET email = '" + input.getText() + "' WHERE user_id = '" + z.getUserID() + "';";
+                    App.executeSQLStatement(sql);
+                    usersPageView();
+                    x.close();
                 }
-                String sql = "UPDATE users SET email = '" + input.getText() + "' WHERE user_id = '" + z.getUserID() + "';";
-                App.executeSQLStatement(sql);
-                usersPageView();
-                x.close();
             }
         });
 
@@ -420,7 +410,9 @@ public class Administrator extends Stage {
 
             private void disableUser() {
                 if (z.getUserID() != App.user.getUserID()) {
-                    if (input.getText().equals("CONFIRM")) {
+                    boolean allCool = true;
+                    allCool = InputValidation.validateConfirm(input.getText());
+                    if (allCool) {
                         int enabled = 0;
                         if (z.getEnabled() == 0) {
                             enabled = 1;
@@ -429,12 +421,6 @@ public class Administrator extends Stage {
                         App.executeSQLStatement(sql);
                         usersPageView();
                         x.close();
-                    } else {
-                        Alert a = new Alert(Alert.AlertType.INFORMATION);
-                        a.setTitle("Error");
-                        a.setHeaderText("Try Again");
-                        a.setContentText("Please enter 'CONFIRM'.\n");
-                        a.show();
                     }
                 } else {
 
@@ -443,8 +429,9 @@ public class Administrator extends Stage {
         });
     }
 //</editor-fold>
-
+//
 //<editor-fold defaultstate="collapsed" desc="Patients Section">
+
     private void patientsPageView() {
         patientsContainer.getChildren().clear();
 
@@ -452,12 +439,13 @@ public class Administrator extends Stage {
         createTablePatients();
         populatePatientsTable();
 
-        patientsContainer.getChildren().addAll(patientsTable);
+        patientsContainer.getChildren().addAll(table);
         patientsContainer.setSpacing(10);
         users.setId("navbar");
         patients.setId("selected");
         appointments.setId("navbar");
         modalities.setId("navbar");
+        patientAlerts.setId("navbar");
 
         //Searchbar Structure
         ChoiceBox<String> choiceBox = new ChoiceBox();
@@ -481,8 +469,8 @@ public class Administrator extends Stage {
             } else if (choiceBox.getValue().equals("Insurance")) {
                 flPatient.setPredicate(p -> p.getInsurance().contains(newValue));//filter table by Date/Time
             }
-            patientsTable.getItems().clear();
-            patientsTable.getItems().addAll(flPatient);
+            table.getItems().clear();
+            table.getItems().addAll(flPatient);
         });
         patientsContainer.getChildren().add(searchContainer);
 
@@ -491,7 +479,7 @@ public class Administrator extends Stage {
     }
 
     private void createTablePatients() {
-        patientsTable.getColumns().clear();
+        table.getColumns().clear();
         //All of the Columns
         TableColumn patientIDCol = new TableColumn("Patient ID");
         TableColumn fullNameCol = new TableColumn("Full Name");
@@ -507,19 +495,19 @@ public class Administrator extends Stage {
         insuranceCol.setCellValueFactory(new PropertyValueFactory<>("insurance"));
 
         //Couldn't put the table
-        patientIDCol.prefWidthProperty().bind(patientsTable.widthProperty().multiply(0.05));
-        fullNameCol.prefWidthProperty().bind(patientsTable.widthProperty().multiply(0.1));
-        emailCol.prefWidthProperty().bind(patientsTable.widthProperty().multiply(0.2));
-        DOBCol.prefWidthProperty().bind(patientsTable.widthProperty().multiply(0.1));
-        insuranceCol.prefWidthProperty().bind(patientsTable.widthProperty().multiply(0.2));
+        patientIDCol.prefWidthProperty().bind(table.widthProperty().multiply(0.05));
+        fullNameCol.prefWidthProperty().bind(table.widthProperty().multiply(0.1));
+        emailCol.prefWidthProperty().bind(table.widthProperty().multiply(0.2));
+        DOBCol.prefWidthProperty().bind(table.widthProperty().multiply(0.1));
+        insuranceCol.prefWidthProperty().bind(table.widthProperty().multiply(0.2));
 
-        patientsTable.setStyle("-fx-background-color: #25A18E; -fx-text-fill: WHITE; ");
+        table.setStyle("-fx-background-color: #25A18E; -fx-text-fill: WHITE; ");
         //back together again
-        patientsTable.getColumns().addAll(patientIDCol, fullNameCol, emailCol, DOBCol, insuranceCol);
+        table.getColumns().addAll(patientIDCol, fullNameCol, emailCol, DOBCol, insuranceCol);
     }
 
     private void populatePatientsTable() {
-        patientsTable.getItems().clear();
+        table.getItems().clear();
         //Connect to database
         String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
         String sql = "Select patients.patientID, patients.email, patients.full_name, patients.dob, patients.address, patients.insurance"
@@ -551,7 +539,7 @@ public class Administrator extends Stage {
             }
 
             flPatient = new FilteredList(FXCollections.observableList(list), p -> true);
-            patientsTable.getItems().addAll(flPatient);
+            table.getItems().addAll(flPatient);
             //
             rs.close();
             stmt.close();
@@ -560,8 +548,9 @@ public class Administrator extends Stage {
             System.out.println(e.getMessage());
         }
     }
-    //</editor-fold>
 
+    //</editor-fold>
+//
 //<editor-fold defaultstate="collapsed" desc="Appointments Section">
     private void appointmentsPageView() {
         appointmentsContainer.getChildren().clear();
@@ -570,12 +559,13 @@ public class Administrator extends Stage {
         createTableAppointments();
         populateTableAppointments();
 
-        appointmentsContainer.getChildren().addAll(appointmentsTable);
+        appointmentsContainer.getChildren().addAll(table);
         appointmentsContainer.setSpacing(10);
         users.setId("navbar");
         patients.setId("navbar");
         appointments.setId("selected");
         modalities.setId("navbar");
+        patientAlerts.setId("navbar");
 
         //Searchbar Structure
         ChoiceBox<String> choiceBox = new ChoiceBox();
@@ -603,15 +593,15 @@ public class Administrator extends Stage {
             if (choiceBox.getValue().equals("Status")) {
                 flAppointment.setPredicate(p -> p.getStatus().toLowerCase().contains(newValue.toLowerCase()));//filter table by Status
             }
-            appointmentsTable.getItems().clear();
-            appointmentsTable.getItems().addAll(flAppointment);
+            table.getItems().clear();
+            table.getItems().addAll(flAppointment);
         });
 
         appointmentsContainer.getChildren().addAll(searchContainer);
     }
 
     private void createTableAppointments() {
-        appointmentsTable.getColumns().clear();
+        table.getColumns().clear();
         //Vbox to hold the table
         //Allow Table to read Appointment class
         TableColumn apptIDCol = new TableColumn("Appointment ID");
@@ -629,18 +619,18 @@ public class Administrator extends Stage {
         status.setCellValueFactory(new PropertyValueFactory<>("status"));
 
         //Set Column Widths
-        apptIDCol.prefWidthProperty().bind(appointmentsTable.widthProperty().multiply(0.05));
-        patientIDCol.prefWidthProperty().bind(appointmentsTable.widthProperty().multiply(0.04));
-        firstNameCol.prefWidthProperty().bind(appointmentsTable.widthProperty().multiply(0.1));
-        timeCol.prefWidthProperty().bind(appointmentsTable.widthProperty().multiply(0.1));
-        orderCol.prefWidthProperty().bind(appointmentsTable.widthProperty().multiply(0.4));
-        status.prefWidthProperty().bind(appointmentsTable.widthProperty().multiply(0.2));
+        apptIDCol.prefWidthProperty().bind(table.widthProperty().multiply(0.05));
+        patientIDCol.prefWidthProperty().bind(table.widthProperty().multiply(0.04));
+        firstNameCol.prefWidthProperty().bind(table.widthProperty().multiply(0.1));
+        timeCol.prefWidthProperty().bind(table.widthProperty().multiply(0.1));
+        orderCol.prefWidthProperty().bind(table.widthProperty().multiply(0.4));
+        status.prefWidthProperty().bind(table.widthProperty().multiply(0.2));
         //Add columns to table
-        appointmentsTable.getColumns().addAll(apptIDCol, patientIDCol, firstNameCol, timeCol, orderCol, status);
+        table.getColumns().addAll(apptIDCol, patientIDCol, firstNameCol, timeCol, orderCol, status);
     }
 
     private void populateTableAppointments() {
-        appointmentsTable.getItems().clear();
+        table.getItems().clear();
         //Connect to database
         String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
         String sql = "Select appt_id, patient_id, patients.full_name, time, statusCode.status"
@@ -665,7 +655,7 @@ public class Administrator extends Stage {
             }
 
             flAppointment = new FilteredList(FXCollections.observableList(list), p -> true);
-            appointmentsTable.getItems().addAll(flAppointment);
+            table.getItems().addAll(flAppointment);
             //
             rs.close();
             stmt.close();
@@ -704,7 +694,7 @@ public class Administrator extends Stage {
     }
 
     //</editor-fold>
-    
+//
 //<editor-fold defaultstate="collapsed" desc="Modalities Section">
     private void modalitiesPageView() {
         modalitiesContainer.getChildren().clear();
@@ -716,18 +706,19 @@ public class Administrator extends Stage {
         Button addModality = new Button("Add Modality");
         HBox btnContainer = new HBox(addModality);
 
-        modalitiesContainer.getChildren().addAll(modalitiesTable, btnContainer);
+        modalitiesContainer.getChildren().addAll(table, btnContainer);
         modalitiesContainer.setSpacing(10);
         users.setId("navbar");
         patients.setId("navbar");
         appointments.setId("navbar");
         modalities.setId("selected");
+        patientAlerts.setId("navbar");
 
         addModality.setOnAction(eh -> addModality());
     }
 
     private void createTableModalities() {
-        modalitiesTable.getColumns().clear();
+        table.getColumns().clear();
         //All of the Columns
         TableColumn orderIDCol = new TableColumn("Order ID");
         TableColumn orderCol = new TableColumn("Order");
@@ -739,16 +730,16 @@ public class Administrator extends Stage {
         buttonCol.setCellValueFactory(new PropertyValueFactory<>("placeholder"));
 
         //Couldn't put all the styling
-        orderIDCol.prefWidthProperty().bind(modalitiesTable.widthProperty().multiply(0.05));
-        orderCol.prefWidthProperty().bind(modalitiesTable.widthProperty().multiply(0.2));
-        buttonCol.prefWidthProperty().bind(modalitiesTable.widthProperty().multiply(0.1));
+        orderIDCol.prefWidthProperty().bind(table.widthProperty().multiply(0.05));
+        orderCol.prefWidthProperty().bind(table.widthProperty().multiply(0.2));
+        buttonCol.prefWidthProperty().bind(table.widthProperty().multiply(0.1));
         //Together again
-        modalitiesTable.getColumns().addAll(orderIDCol, orderCol, buttonCol);
+        table.getColumns().addAll(orderIDCol, orderCol, buttonCol);
         //Add Status Update Column:
     }
 
     private void populateTableModalities() {
-        modalitiesTable.getItems().clear();
+        table.getItems().clear();
         //Connect to database
         String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
         String sql = "Select * "
@@ -782,7 +773,7 @@ public class Administrator extends Stage {
             }
 
 //            fl = new FilteredList(FXCollections.observableList(list), p -> true);
-            modalitiesTable.getItems().addAll(list);
+            table.getItems().addAll(list);
             //
             rs.close();
             stmt.close();
@@ -826,5 +817,253 @@ public class Administrator extends Stage {
     }
 
     //</editor-fold>
+//
+    private void patientAlertsPageView() {
+        patientAlertsContainer.getChildren().clear();
+
+        main.setCenter(patientAlertsContainer);
+        createTablePatientAlerts();
+        populatePatientAlerts();
+
+        Button addPatientAlert = new Button("Add Patient Alert");
+        HBox btnContainer = new HBox(addPatientAlert);
+
+        patientAlertsContainer.getChildren().addAll(table, btnContainer);
+        patientAlertsContainer.setSpacing(10);
+        users.setId("navbar");
+        patients.setId("navbar");
+        appointments.setId("navbar");
+        modalities.setId("navbar");
+        patientAlerts.setId("selected");
+        addPatientAlert.setOnAction(eh -> addPatientAlert());
+    }
+
+    private void createTablePatientAlerts() {
+        table.getColumns().clear();
+        //All of the Columns
+        TableColumn alertIDCol = new TableColumn("ID");
+        TableColumn alertCol = new TableColumn("Alert");
+        TableColumn flagsCol = new TableColumn("Flags");
+        TableColumn button1Col = new TableColumn("Add Flag");
+        TableColumn buttonCol = new TableColumn("Delete");
+
+        //And all of the Value setting
+        alertIDCol.setCellValueFactory(new PropertyValueFactory<>("alertID"));
+        alertCol.setCellValueFactory(new PropertyValueFactory<>("alert"));
+        flagsCol.setCellValueFactory(new PropertyValueFactory<>("flags"));
+        button1Col.setCellValueFactory(new PropertyValueFactory<>("placeholder1"));
+        buttonCol.setCellValueFactory(new PropertyValueFactory<>("placeholder"));
+
+        //Couldn't put all the styling
+        alertIDCol.prefWidthProperty().bind(table.widthProperty().multiply(0.05));
+        alertCol.prefWidthProperty().bind(table.widthProperty().multiply(0.2));
+        flagsCol.prefWidthProperty().bind(table.widthProperty().multiply(0.5));
+        buttonCol.prefWidthProperty().bind(table.widthProperty().multiply(0.1));
+        button1Col.prefWidthProperty().bind(table.widthProperty().multiply(0.1));
+        //Together again
+        table.getColumns().addAll(alertIDCol, alertCol, flagsCol, button1Col, buttonCol);
+        //Add Status Update Column:
+    }
+
+    private void populatePatientAlerts() {
+        table.getItems().clear();
+        //Connect to database
+        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
+        String sql = "Select patientAlerts.alertID, patientAlerts.alert "
+                + " FROM patientAlerts "
+                + " "
+                + " ;";
+
+        try {
+            Connection conn = DriverManager.getConnection(url);
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+            //
+            List<PatientAlert> list = new ArrayList<PatientAlert>();
+            while (rs.next()) {
+                //What I receieve:  patientID, email, full_name, dob, address, insurance
+                PatientAlert pa = new PatientAlert(rs.getInt("alertID"), rs.getString("alert"), getFlagsFromDatabase(rs.getInt("alertID")));
+
+                pa.placeholder.setText("Delete Alert");
+                pa.placeholder.setId("cancel");
+                pa.placeholder.setOnAction(new EventHandler<ActionEvent>() {
+                    @Override
+                    public void handle(ActionEvent e) {
+                        String sql = "DELETE FROM patientAlerts WHERE alertID = '" + pa.getAlertID() + "' ";
+                        App.executeSQLStatement(sql);
+                        sql = "DELETE FROM flags WHERE alertID = '" + pa.getAlertID() + "' ";
+                        App.executeSQLStatement(sql);
+                        sql = "DELETE FROM alertsPatientConnnector WHERE alertID = '" + pa.getAlertID() + "' ";
+                        App.executeSQLStatement(sql);
+                        populatePatientAlerts();
+                    }
+                });
+                pa.placeholder1.setText("Add Flag");
+                pa.placeholder1.setId("complete");
+                pa.placeholder1.setOnAction(eh -> addFlag(pa));
+
+                list.add(pa);
+            }
+
+//            fl = new FilteredList(FXCollections.observableList(list), p -> true);
+            table.getItems().addAll(list);
+            //
+            rs.close();
+            stmt.close();
+            conn.close();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    private void addPatientAlert() {
+        Stage x = new Stage();
+        x.initOwner(this);
+        x.setTitle("Add Patient Alert");
+        x.initModality(Modality.WINDOW_MODAL);
+        BorderPane y = new BorderPane();
+        Label txt = new Label("Prompt: ");
+        TextField alert = new TextField("Ex: Allergic to peanuts?");
+        alert.setPrefWidth(200);
+        Button submit = new Button("Submit");
+        submit.setId("complete");
+
+        VBox center = new VBox(txt, alert, submit);
+
+        center.setAlignment(Pos.CENTER);
+        center.setPadding(new Insets(10));
+        y.setCenter(center);
+        y.getStylesheets().add("file:stylesheet.css");
+        x.setScene(new Scene(y));
+        x.show();
+
+        submit.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent eh) {
+                String sql = "INSERT INTO patientAlerts(alert) VALUES ('" + alert.getText() + "') ;";
+                App.executeSQLStatement(sql);
+                populatePatientAlerts();
+                x.close();
+            }
+
+        });
+    }
+//
+
+    private String getFlagsFromDatabase(int aInt) {
+
+        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
+        String val = "";
+        String sql = "Select orderCodes.orders "
+                + " FROM flags "
+                + " INNER JOIN orderCodes ON flags.orderID = orderCodes.orderID "
+                + " WHERE alertID = '" + aInt + "' "
+                + ";";
+
+        try {
+            Connection conn = DriverManager.getConnection(url);
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+            //
+            List<PatientAlert> list = new ArrayList<PatientAlert>();
+            while (rs.next()) {
+                //What I receieve:  patientID, email, full_name, dob, address, insurance
+                val += rs.getString("orders") + ", ";
+            }
+            //
+            rs.close();
+            stmt.close();
+            conn.close();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return val;
+    }
+
+    private void addFlag(PatientAlert pa) {
+        ArrayList<String> modalities = new ArrayList<String>();
+        Stage x = new Stage();
+        x.initOwner(this);
+        x.setTitle("Add Flag");
+
+        x.initModality(Modality.WINDOW_MODAL);
+        BorderPane y = new BorderPane();
+        Label txt = new Label("Select: ");
+
+        Button submit = new Button("Submit");
+        submit.setId("complete");
+
+        ComboBox orders = populateOrdersDropdown();
+        orders.setPrefWidth(100);
+        HBox buttonContainer = new HBox();
+        buttonContainer.setSpacing(10);
+        buttonContainer.setPadding(new Insets(10));
+        VBox center = new VBox(txt, orders, buttonContainer, submit);
+
+        center.setAlignment(Pos.CENTER);
+        center.setPadding(new Insets(10));
+        y.setCenter(center);
+        y.getStylesheets().add("file:stylesheet.css");
+        x.setScene(new Scene(y));
+        x.setHeight(200);
+        x.setWidth(300);
+        x.show();
+
+        submit.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent eh) {
+                for (String z : modalities) {
+                    String sql = "INSERT INTO flags VALUES ('" + pa.getAlertID() + "', (SELECT orderID FROM orderCodes WHERE orders = '" + z + "') )";
+                    App.executeSQLStatement(sql);
+                }
+                populatePatientAlerts();
+                x.close();
+            }
+
+        });
+
+        orders.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent t) {
+                modalities.add(orders.getValue().toString());
+                Button temp = new Button(orders.getValue().toString());
+                buttonContainer.getChildren().add(temp);
+                temp.setOnAction(new EventHandler<ActionEvent>() {
+                    @Override
+                    public void handle(ActionEvent t) {
+                        if (!orders.getValue().toString().isBlank()) {
+                            modalities.remove(temp.getText());
+                            buttonContainer.getChildren().remove(temp);
+                        }
+                    }
+                });
+            }
+        });
+
+    }
+
+    private ComboBox populateOrdersDropdown() {
+        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
+        String sql = "Select orders "
+                + " FROM orderCodes;";
+        ComboBox dropdown = new ComboBox();
+        try {
+            Connection conn = DriverManager.getConnection(url);
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+            //
+
+            while (rs.next()) {
+                dropdown.getItems().add(rs.getString("orders"));
+            }
+            //
+            rs.close();
+            stmt.close();
+            conn.close();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return dropdown;
+    }
 
 }

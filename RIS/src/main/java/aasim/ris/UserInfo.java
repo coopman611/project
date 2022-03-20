@@ -71,7 +71,7 @@ public class UserInfo extends Stage {
     List<File> fileList = new ArrayList<File>();
 
     public UserInfo() {
-        this.setTitle("RIS - Radiology Information System (Technician)");
+        this.setTitle("RIS - Radiology Information System (Profile)");
         //Navbar
         navbar.setAlignment(Pos.TOP_RIGHT);
         logOut.setPrefHeight(30);
