@@ -136,7 +136,7 @@ public class Login extends Stage {
                 Stage x = new Receptionist();
                 x.show();
                 x.setMaximized(true);
-                this.hide();
+                this.hide();    
             } else if (App.user.getRole() == 3) {
                 //technician
                 Stage x = new Technician();
@@ -156,7 +156,10 @@ public class Login extends Stage {
                 x.setMaximized(true);
                 this.hide();
             } else if (App.user.getRole() == 6) {
-
+                Stage x = new Rad();
+                x.show();
+                x.setMaximized(true);
+                this.hide();
             } else if (App.user.getRole() == 1) {
                 Stage x = new Administrator();
                 x.show();

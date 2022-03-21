@@ -249,7 +249,9 @@ public class ReferralDoctor extends Stage {
         Button pullData = new Button("Check for Patient");
         HBox container = new HBox(text, email, text1, name, pullData);
         //Hidden Containers
-        Label text2 = new Label("Date of Birth: \n(Press Enter)");
+        Label text2 = new Label("Date of Birth:\n(Press Enter after Entering date)\n(MM/DD/YYYY)");
+        text2.setPrefWidth(120);
+        text2.setWrapText(true);
         DatePicker datePicker = new DatePicker();
         Label text3 = new Label("Address: ");
         TextField address = new TextField("");
@@ -930,6 +932,7 @@ public class ReferralDoctor extends Stage {
             int counter = 0;
             for (Pair i : list) {
                 ImageView temp = new ImageView(i.getImg());
+                temp.setPreserveRatio(true);
                 temp.setFitHeight(300);
 //                Button download = new Button("Download");
                 imgContainer.getChildren().addAll(temp);
