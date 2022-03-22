@@ -20,6 +20,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -37,6 +38,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -254,8 +256,9 @@ public class Technician extends Stage {
         Label patInfo = new Label("Patient: " + fullname + "\t Order/s Requested: " + order + "\n");
         Label imgInfo = new Label("Images Uploaded: " + fullname + "\t Order/s Requested: " + order);
         fileChooser.getExtensionFilters().addAll(
-                new FileChooser.ExtensionFilter("Image Files", "*.png")
-        //                 new FileChooser.ExtensionFilter("HTML Files", "*.htm")
+                new FileChooser.ExtensionFilter("JPG Files", "*.jpg", "*.jpeg"),
+                new FileChooser.ExtensionFilter("GIF Files", "*.gif"),
+                new FileChooser.ExtensionFilter("PNG Files", "*.png")
         );
         Button complete = new Button("Fulfill Order");
         complete.setId("complete");
@@ -374,19 +377,42 @@ public class Technician extends Stage {
         Label label = new Label("You are uploading the images: ");
         //Images
         VBox imgContainer = new VBox();
+
         ArrayList<Image> list = retrieveUploadedImages(patID, apptId);
+        ArrayList<HBox> hbox = new ArrayList<HBox>();
+
         if (list.isEmpty()) {
             System.out.println("Error, image list is empty");
         } else {
+            int counter = 0;
+            int hboxCounter = 0;
+            for (int i = 0; i < (list.size() / 2) + 1; i++) {
+                hbox.add(new HBox());
+            }
             for (Image i : list) {
+                if (counter > 2) {
+                    counter++;
+                    hboxCounter++;
+                }
                 ImageView temp = new ImageView(i);
                 temp.setPreserveRatio(true);
                 temp.setFitHeight(300);
-                imgContainer.getChildren().add(temp);
+                Button download = new Button("Download");
+                VBox tempBox = new VBox(temp);
+                tempBox.setId("borderOnHover");
+                tempBox.setSpacing(5);
+                tempBox.setAlignment(Pos.CENTER);
+                tempBox.setPadding(new Insets(10));
+                hbox.get(hboxCounter).getChildren().addAll(tempBox);
+                counter++;
             }
         }
-        ScrollPane s1 = new ScrollPane();
-        s1.setContent(imgContainer);
+
+        for (HBox temp : hbox) {
+            imgContainer.getChildren().add(temp);
+        }
+        ScrollPane s1 = new ScrollPane(imgContainer);
+        //
         //End Images
         Button confirm = new Button("Confirm");
         confirm.setId("complete");

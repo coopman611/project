@@ -5,6 +5,15 @@ import datastorage.InputValidation;
 import datastorage.Patient;
 import datastorage.PatientAlert;
 import datastorage.User;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URLConnection;
+import java.nio.file.StandardCopyOption;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -13,6 +22,8 @@ import java.sql.Statement;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.collections.FXCollections;
 import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
@@ -39,8 +50,10 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import org.apache.commons.io.FileUtils;
 
 public class ReferralDoctor extends Stage {
     //Navbar
@@ -945,18 +958,22 @@ public class ReferralDoctor extends Stage {
                 ImageView temp = new ImageView(i.getImg());
                 temp.setPreserveRatio(true);
                 temp.setFitHeight(300);
-//                Button download = new Button("Download");
-                hbox.get(hboxCounter).getChildren().addAll(temp);
-//                download.setOnAction(new EventHandler<ActionEvent>() {
-//                    @Override
-//                    public void handle(ActionEvent e) {
-//                        DirectoryChooser directoryChooser = new DirectoryChooser();
-//                        File selectedDirectory = directoryChooser.showDialog(x);
-//
-//                        downloadImage(i.getImgID(), selectedDirectory);
-//                    }
-//
-//                });
+                Button download = new Button("Download");
+                VBox tempBox = new VBox(temp, download);
+                tempBox.setId("borderOnHover");
+                tempBox.setSpacing(5);
+                tempBox.setAlignment(Pos.CENTER);
+                tempBox.setPadding(new Insets(10));
+                hbox.get(hboxCounter).getChildren().addAll(tempBox);
+                download.setOnAction(new EventHandler<ActionEvent>() {
+                    @Override
+                    public void handle(ActionEvent e) {
+                        DirectoryChooser directoryChooser = new DirectoryChooser();
+                        File selectedDirectory = directoryChooser.showDialog(x);
+                        downloadImage(i, selectedDirectory);
+                    }
+
+                });
                 counter++;
             }
         }
@@ -969,7 +986,9 @@ public class ReferralDoctor extends Stage {
         Label radiologyReport = new Label();
         radiologyReport.setText("Radiology Report: \n" + getRadiologyReport(appt.getApptID()) + "\n\n");
         HBox container = new HBox(s1);
-        VBox center = new VBox(container, radiologyReport, confirm);
+        ScrollPane s2 = new ScrollPane(radiologyReport);
+        s2.setPrefHeight(400);
+        VBox center = new VBox(container, s2, confirm);
         container.setSpacing(10);
         center.setAlignment(Pos.CENTER);
         center.setPadding(new Insets(10));
@@ -1006,7 +1025,9 @@ public class ReferralDoctor extends Stage {
             //
             while (rs.next()) {
                 //What I receieve:  image
-                list.add(new Pair(new Image(rs.getBinaryStream("image")), rs.getInt("imageID")));
+                Pair pair = new Pair(new Image(rs.getBinaryStream("image")), rs.getInt("imageID"));
+                pair.fis = rs.getBinaryStream("image");
+                list.add(pair);
 //                System.out.println(rs.getBinaryStream("image"));
             }
             //
@@ -1136,10 +1157,24 @@ public class ReferralDoctor extends Stage {
         }
     }
 
+    private void downloadImage(Pair img, File selectedDirectory) {
+        try {
+            String mimeType = URLConnection.guessContentTypeFromStream(img.fis);
+            System.out.print(mimeType);
+            mimeType = mimeType.replace("image/", "");
+            File outputFile = new File(selectedDirectory.getPath() + "/" + img.imgID + "." + mimeType);
+            FileUtils.copyInputStreamToFile(img.fis, outputFile);
+        } catch (IOException ex) {
+            Logger.getLogger(ReferralDoctor.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+    }
+
     private class Pair {
 
         Image img;
         Integer imgID;
+        InputStream fis;
 
         public Pair(Image img, Integer imgID) {
             this.img = img;
