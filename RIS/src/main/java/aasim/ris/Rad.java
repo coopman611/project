@@ -5,6 +5,9 @@ import datastorage.User;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URLConnection;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -48,7 +51,9 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
+import org.apache.commons.io.FileUtils;
 
 public class Rad extends Stage {
     //navbar
@@ -307,7 +312,7 @@ public class Rad extends Stage {
         //viewImg.setId("View Image");
 
         VBox imgContainer = new VBox();
-        ArrayList<Image> list = retrieveUploadedImages(patID, apptId);
+        ArrayList<Pair> list = retrieveUploadedImages(apptId);
         ArrayList<HBox> hbox = new ArrayList<HBox>();
         int counter = 0;
         int hboxCounter = 0;
@@ -317,15 +322,30 @@ public class Rad extends Stage {
             for (int i = 0; i < (list.size() / 2) + 1; i++) {
                 hbox.add(new HBox());
             }
-            for (Image i : list) {
+            for (Pair i : list) {
                 if (counter > 2) {
-                    counter = 0;
+                    counter++;
                     hboxCounter++;
                 }
-                ImageView temp = new ImageView(i);
+                ImageView temp = new ImageView(i.getImg());
                 temp.setPreserveRatio(true);
                 temp.setFitHeight(300);
-                hbox.get(hboxCounter).getChildren().add(temp);
+                Button download = new Button("Download");
+                VBox tempBox = new VBox(temp, download);
+                tempBox.setId("borderOnHover");
+                tempBox.setSpacing(5);
+                tempBox.setAlignment(Pos.CENTER);
+                tempBox.setPadding(new Insets(10));
+                hbox.get(hboxCounter).getChildren().addAll(tempBox);
+                download.setOnAction(new EventHandler<ActionEvent>() {
+                    @Override
+                    public void handle(ActionEvent e) {
+                        DirectoryChooser directoryChooser = new DirectoryChooser();
+                        File selectedDirectory = directoryChooser.showDialog(x);
+                        downloadImage(i, selectedDirectory);
+                    }
+
+                });
                 counter++;
             }
         }
@@ -374,56 +394,14 @@ public class Rad extends Stage {
         App.executeSQLStatement(sql);
     }
 
-    private void completeOrder(int patID, int apptId) {
-        Stage x = new Stage();
-        x.initOwner(this);
-        x.setMaximized(true);
-        x.initModality(Modality.WINDOW_MODAL);
-        BorderPane y = new BorderPane();
-        Label label = new Label("Images: ");
-        label.setMinHeight(Region.USE_PREF_SIZE);
-        //Images
-        VBox imgContainer = new VBox();
-        ArrayList<Image> list = retrieveUploadedImages(patID, apptId);
-        if (list.isEmpty()) {
-            System.out.println("Error, image list is empty");
-        } else {
-            for (Image i : list) {
-                ImageView temp = new ImageView(i);
-                imgContainer.getChildren().add(temp);
-            }
-        }
-        ScrollPane s1 = new ScrollPane();
-        s1.setContent(imgContainer);
-        //End Images
-
-        Button cancel = new Button("Close");
-        cancel.setId("Close");
-        HBox btnContainer = new HBox(cancel);
-        btnContainer.setSpacing(25);
-        VBox container = new VBox(label, s1, btnContainer);
-        y.setCenter(container);
-        y.getStylesheets().add("file:stylesheet.css");
-        x.setScene(new Scene(y));
-        x.show();
-
-        cancel.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent e) {
-                x.close();
-            }
-        });
-
-    }
-
-    private ArrayList<Image> retrieveUploadedImages(int patID, int apptId) {
+    private ArrayList<Pair> retrieveUploadedImages(int apptId) {
         //Connect to database
-        ArrayList<Image> list = new ArrayList<Image>();
+        ArrayList<Pair> list = new ArrayList<Pair>();
 
         String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
         String sql = "SELECT *"
                 + " FROM images"
-                + " WHERE patientID = '" + patID + "' AND apptID = '" + apptId + "'"
+                + " WHERE apptID = '" + apptId + "'"
                 + " ORDER BY imageID DESC;";
 
         try {
@@ -433,7 +411,9 @@ public class Rad extends Stage {
             //
             while (rs.next()) {
                 //What I receieve:  image
-                list.add(new Image(rs.getBinaryStream("image")));
+                Pair pair = new Pair(new Image(rs.getBinaryStream("image")), rs.getInt("imageID"));
+                pair.fis = rs.getBinaryStream("image");
+                list.add(pair);
 //                System.out.println(rs.getBinaryStream("image"));
             }
             //
@@ -460,6 +440,48 @@ public class Rad extends Stage {
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
+    }
+
+    private void downloadImage(Pair img, File selectedDirectory) {
+        try {
+            String mimeType = URLConnection.guessContentTypeFromStream(img.fis);
+            System.out.print(mimeType);
+            mimeType = mimeType.replace("image/", "");
+            File outputFile = new File(selectedDirectory.getPath() + "/" + img.imgID + "." + mimeType);
+            FileUtils.copyInputStreamToFile(img.fis, outputFile);
+        } catch (IOException ex) {
+            Logger.getLogger(ReferralDoctor.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+    }
+
+    private class Pair {
+
+        Image img;
+        Integer imgID;
+        InputStream fis;
+
+        public Pair(Image img, Integer imgID) {
+            this.img = img;
+            this.imgID = imgID;
+        }
+
+        public Image getImg() {
+            return img;
+        }
+
+        public void setImg(Image img) {
+            this.img = img;
+        }
+
+        public Integer getImgID() {
+            return imgID;
+        }
+
+        public void setImgID(Integer imgID) {
+            this.imgID = imgID;
+        }
+
     }
 
 }

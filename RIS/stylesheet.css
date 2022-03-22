@@ -74,3 +74,11 @@
     -fx-alignment: center ;
     -fx-padding:10;
 }
+
+#borderOnHover:hover{
+
+    -fx-border-style: dashed;
+    -fx-border-color: black;
+    -fx-background-color: grey;
+
+}
