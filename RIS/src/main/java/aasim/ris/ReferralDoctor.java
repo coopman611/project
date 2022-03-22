@@ -925,18 +925,28 @@ public class ReferralDoctor extends Stage {
         confirm.setId("complete");
         //
         VBox imgContainer = new VBox();
+
         ArrayList<Pair> list = retrieveUploadedImages(appt.getApptID());
+        ArrayList<HBox> hbox = new ArrayList<HBox>();
+
         if (list.isEmpty()) {
             System.out.println("Error, image list is empty");
         } else {
             int counter = 0;
+            int hboxCounter = 0;
+            for (int i = 0; i < (list.size() / 2) + 1; i++) {
+                hbox.add(new HBox());
+            }
             for (Pair i : list) {
+                if (counter > 2) {
+                    counter++;
+                    hboxCounter++;
+                }
                 ImageView temp = new ImageView(i.getImg());
                 temp.setPreserveRatio(true);
                 temp.setFitHeight(300);
 //                Button download = new Button("Download");
-                imgContainer.getChildren().addAll(temp);
-
+                hbox.get(hboxCounter).getChildren().addAll(temp);
 //                download.setOnAction(new EventHandler<ActionEvent>() {
 //                    @Override
 //                    public void handle(ActionEvent e) {
@@ -950,8 +960,11 @@ public class ReferralDoctor extends Stage {
                 counter++;
             }
         }
-        ScrollPane s1 = new ScrollPane();
-        s1.setContent(imgContainer);
+
+        for (HBox temp : hbox) {
+            imgContainer.getChildren().add(temp);
+        }
+        ScrollPane s1 = new ScrollPane(imgContainer);
         //
         Label radiologyReport = new Label();
         radiologyReport.setText("Radiology Report: \n" + getRadiologyReport(appt.getApptID()) + "\n\n");

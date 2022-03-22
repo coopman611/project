@@ -40,6 +40,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -311,11 +312,11 @@ public class Receptionist extends Stage {
                 container.getChildren().clear();
 
                 DatePicker datePicker = new DatePicker();
-                Label text = new Label("Insert Date: ");
-                Label text1 = new Label("Insert Time (HH:MM): ");
+                Text text = new Text("Insert Date: ");
+                Text text1 = new Text("Insert Time (HH:MM): ");
                 TextField time = new TextField("HH:MM");
-                text.setPrefWidth(100);
-                text1.setPrefWidth(150);
+//                text.setPrefWidth(100);
+//                text1.setPrefWidth(150);
                 Button submit = new Button("Submit");
                 submit.setPrefWidth(100);
                 submit.setId("complete");
@@ -398,17 +399,17 @@ public class Receptionist extends Stage {
         x.setWidth(300);
         scene.getStylesheets().add("file:stylesheet.css");
         //
-        Label emailLabel = new Label("Email: ");
+        Text emailText = new Text("Email: ");
         TextField email = new TextField(z.getEmail());
-        HBox emailContainer = new HBox(emailLabel, email);
+        HBox emailContainer = new HBox(emailText, email);
 
-        Label addressLabel = new Label("Address: ");
+        Text addressText = new Text("Address: ");
         TextField address = new TextField(z.getAddress());
-        HBox addressContainer = new HBox(addressLabel, address);
+        HBox addressContainer = new HBox(addressText, address);
 
-        Label insuranceLabel = new Label("Insurance: ");
+        Text insuranceText = new Text("Insurance: ");
         TextField insurance = new TextField(z.getInsurance());
-        HBox insuranceContainer = new HBox(insuranceLabel, insurance);
+        HBox insuranceContainer = new HBox(insuranceText, insurance);
 
         Button submit = new Button("Submit");
         submit.setId("complete");
@@ -417,7 +418,7 @@ public class Receptionist extends Stage {
         ArrayList<PatientAlert> alertsToRemoveForThisPatient = new ArrayList<PatientAlert>();
         VBox patientAlertContainer = new VBox();
         for (PatientAlert a : paList) {
-            Label label = new Label(a.getAlert());
+            Text Text = new Text(a.getAlert());
             ComboBox dropdown = new ComboBox();
             dropdown.getItems().addAll("Yes", "No");
             if (allergies.contains(a)) {
@@ -425,7 +426,7 @@ public class Receptionist extends Stage {
             } else {
                 dropdown.setValue("No");
             }
-            HBox temp = new HBox(label, dropdown);
+            HBox temp = new HBox(Text, dropdown);
             temp.setSpacing(10);
             temp.setPadding(new Insets(10));
 
@@ -636,14 +637,14 @@ public class Receptionist extends Stage {
             TextField patEmail = new TextField("Email");
             Button check = new Button("Pull Patient Information");
             //time && order
-            Label text = new Label("Insert Date: ");
-            Label text1 = new Label("Insert Time (HH:MM): ");
+            Text text = new Text("Insert Date: ");
+            Text text1 = new Text("Insert Time (HH:MM): ");
             TextField time = new TextField("HH:MM");
-            text.setPrefWidth(100);
-            text1.setPrefWidth(150);
+//            text.setPrefWidth(100);
+//            text1.setPrefWidth(150);
 
-            Label tutorial = new Label("Click to remove: ");
-            tutorial.setPrefWidth(100);
+            Text tutorial = new Text("Click to remove: ");
+//            tutorial.setPrefWidth(100);
 
             Button submit = new Button("Submit");
             submit.setId("complete");
@@ -687,8 +688,8 @@ public class Receptionist extends Stage {
                     pat = pullPatientInfo(patFullName.getText(), patEmail.getText());
                     if (pat != null) {
                         check.setVisible(false);
-                        Label request = new Label("Orders Requested: ");
-                        request.setPrefWidth(150);
+                        Text request = new Text("Orders Requested: ");
+//                        request.setPrefWidth(150);
                         ComboBox dropdown = getPatOrders(pat.getPatientID());
                         dropdown.setPrefWidth(100);
 

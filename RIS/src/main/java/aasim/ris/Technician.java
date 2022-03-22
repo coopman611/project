@@ -380,6 +380,8 @@ public class Technician extends Stage {
         } else {
             for (Image i : list) {
                 ImageView temp = new ImageView(i);
+                temp.setPreserveRatio(true);
+                temp.setFitHeight(300);
                 imgContainer.getChildren().add(temp);
             }
         }

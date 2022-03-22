@@ -46,6 +46,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
@@ -307,14 +308,32 @@ public class Rad extends Stage {
 
         VBox imgContainer = new VBox();
         ArrayList<Image> list = retrieveUploadedImages(patID, apptId);
+        ArrayList<HBox> hbox = new ArrayList<HBox>();
+        int counter = 0;
+        int hboxCounter = 0;
         if (list.isEmpty()) {
             System.out.println("Error, image list is empty");
         } else {
+            for (int i = 0; i < (list.size() / 2) + 1; i++) {
+                hbox.add(new HBox());
+            }
             for (Image i : list) {
+                if (counter > 2) {
+                    counter = 0;
+                    hboxCounter++;
+                }
                 ImageView temp = new ImageView(i);
-                imgContainer.getChildren().add(temp);
+                temp.setPreserveRatio(true);
+                temp.setFitHeight(300);
+                hbox.get(hboxCounter).getChildren().add(temp);
+                counter++;
             }
         }
+        for (HBox i : hbox) {
+            imgContainer.getChildren().add(i);
+        }
+        imgContainer.setSpacing(10);
+        imgContainer.setPadding(new Insets(10));
         ScrollPane s1 = new ScrollPane();
         s1.setContent(imgContainer);
 
@@ -323,7 +342,7 @@ public class Rad extends Stage {
 
         Button cancel = new Button("Cancel");
         cancel.setId("cancel");
-        HBox btnContainer = new HBox(cancel, reportText, confirm, s1);
+        HBox btnContainer = new HBox(cancel, confirm, s1);
         btnContainer.setSpacing(25);
         y.getStylesheets().add("file:stylesheet.css");
         x.setScene(new Scene(y));
@@ -345,7 +364,7 @@ public class Rad extends Stage {
             }
         });
 
-        VBox container = new VBox(label, btnContainer);
+        VBox container = new VBox(s1, label, reportText, btnContainer);
         y.setCenter(container);
         x.show();
     }
@@ -362,6 +381,7 @@ public class Rad extends Stage {
         x.initModality(Modality.WINDOW_MODAL);
         BorderPane y = new BorderPane();
         Label label = new Label("Images: ");
+        label.setMinHeight(Region.USE_PREF_SIZE);
         //Images
         VBox imgContainer = new VBox();
         ArrayList<Image> list = retrieveUploadedImages(patID, apptId);

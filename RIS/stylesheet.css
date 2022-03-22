@@ -3,12 +3,15 @@
     -fx-background-color: #00A5CF;
     -fx-padding:10;
     -fx-text-fill: white;
+    -fx-min-width: 100;
 }
 .button:hover{
     -fx-background-color: #9FFFCB;
 }
 .label{
     -fx-padding: 10;
+    -fx-min-width: 100;
+    -fx-wrap-text: true;
 }
 /*Choice Box*/
 .choice-box{

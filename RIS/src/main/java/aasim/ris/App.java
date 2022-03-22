@@ -165,6 +165,13 @@ public class App extends Application {
                 + ");";
         executeSQLStatement(sql);
 
+        sql = "CREATE TABLE radPatientConnector ("
+                + " patientID INTEGER UNIQUE, "
+                + " userID INTEGER, "
+                + " UNIQUE(patientID, alertID) "
+                + ");";
+        executeSQLStatement(sql);
+
     }
 
     public static void createStatusCodesTable(String fileName) {
@@ -245,7 +252,6 @@ public class App extends Application {
         executeSQLStatement(sql6);
         executeSQLStatement(sql7);
         executeSQLStatement(sql8);
-
     }
 
     public static void populateTablesAdmin(String fileName) {
