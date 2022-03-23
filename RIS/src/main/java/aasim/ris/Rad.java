@@ -168,7 +168,7 @@ public class Rad extends Stage {
     private void populateTable() {
         appointmentsTable.getItems().clear();
         //connects to database
-        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
+
         String sql = "Select appt_id, patient_id, patients.full_name, time, statusCode.status"
                 + " FROM appointments"
                 + " INNER JOIN statusCode ON appointments.statusCode = statusCode.statusID"
@@ -176,7 +176,7 @@ public class Rad extends Stage {
                 + " WHERE statusCode = 4"
                 + " ORDER BY time ASC;";
         try {
-            Connection conn = DriverManager.getConnection(url);
+            Connection conn = DriverManager.getConnection(App.url);
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             //
@@ -209,7 +209,7 @@ public class Rad extends Stage {
     }
 
     private String getPatOrders(int patientID, int aInt) {
-        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
+
         String sql = "Select orderCodes.orders "
                 + " FROM appointmentsOrdersConnector "
                 + " INNER JOIN orderCodes ON appointmentsOrdersConnector.orderCodeID = orderCodes.orderID "
@@ -217,7 +217,7 @@ public class Rad extends Stage {
 
         String value = "";
         try {
-            Connection conn = DriverManager.getConnection(url);
+            Connection conn = DriverManager.getConnection(App.url);
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             //
@@ -398,14 +398,14 @@ public class Rad extends Stage {
         //Connect to database
         ArrayList<Pair> list = new ArrayList<Pair>();
 
-        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
+
         String sql = "SELECT *"
                 + " FROM images"
                 + " WHERE apptID = '" + apptId + "'"
                 + " ORDER BY imageID DESC;";
 
         try {
-            Connection conn = DriverManager.getConnection(url);
+            Connection conn = DriverManager.getConnection(App.url);
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             //
@@ -427,12 +427,12 @@ public class Rad extends Stage {
     }
 
     private void updateAppointmentStatus(int patID, int apptId) {
-        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
+
         String sql = "UPDATE appointments"
                 + " SET statusCode = 5"
                 + " WHERE appt_id = '" + apptId + "';";
         try {
-            Connection conn = DriverManager.getConnection(url);
+            Connection conn = DriverManager.getConnection(App.url);
             Statement stmt = conn.createStatement();
             stmt.execute(sql);
             stmt.close();

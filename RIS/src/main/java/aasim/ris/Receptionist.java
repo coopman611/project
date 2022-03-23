@@ -188,7 +188,7 @@ public class Receptionist extends Stage {
     private void populateTable() {
         table.getItems().clear();
         //Connect to database
-        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
+
         String sql = "Select appt_id, patient_id, patients.full_name, time, statusCode.status"
                 + " FROM appointments"
                 + " INNER JOIN statusCode ON appointments.statusCode = statusCode.statusID "
@@ -197,7 +197,7 @@ public class Receptionist extends Stage {
                 + " ORDER BY time ASC;";
 
         try {
-            Connection conn = DriverManager.getConnection(url);
+            Connection conn = DriverManager.getConnection(App.url);
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             //
@@ -231,7 +231,7 @@ public class Receptionist extends Stage {
     }
 
     private String getPatOrders(int patientID, int aInt) {
-        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
+
         String sql = "Select orderCodes.orders "
                 + " FROM appointmentsOrdersConnector "
                 + " INNER JOIN orderCodes ON appointmentsOrdersConnector.orderCodeID = orderCodes.orderID "
@@ -239,7 +239,7 @@ public class Receptionist extends Stage {
 
         String value = "";
         try {
-            Connection conn = DriverManager.getConnection(url);
+            Connection conn = DriverManager.getConnection(App.url);
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             //
@@ -486,14 +486,14 @@ public class Receptionist extends Stage {
 
     private ArrayList<PatientAlert> populatePaList() {
         ArrayList<PatientAlert> paList = new ArrayList<>();
-        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
+
         String sql = "Select patientAlerts.alertID, patientAlerts.alert "
                 + " FROM patientAlerts "
                 + " "
                 + " ;";
 
         try {
-            Connection conn = DriverManager.getConnection(url);
+            Connection conn = DriverManager.getConnection(App.url);
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             //
@@ -514,7 +514,7 @@ public class Receptionist extends Stage {
 
     private ArrayList<PatientAlert> populateAllergies(Patient z) {
         ArrayList<PatientAlert> allergies = new ArrayList<>();
-        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
+
         String sql = "Select patientAlerts.alertID, patientAlerts.alert "
                 + " FROM patientAlerts "
                 + " INNER JOIN alertsPatientConnector ON patientAlerts.alertID = alertsPatientConnector.alertID "
@@ -522,7 +522,7 @@ public class Receptionist extends Stage {
                 + ";";
 
         try {
-            Connection conn = DriverManager.getConnection(url);
+            Connection conn = DriverManager.getConnection(App.url);
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             //
@@ -543,7 +543,7 @@ public class Receptionist extends Stage {
 
     private String getFlagsFromDatabase(int aInt) {
 
-        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
+
         String val = "";
         String sql = "Select orderCodes.orders "
                 + " FROM flags "
@@ -552,7 +552,7 @@ public class Receptionist extends Stage {
                 + ";";
 
         try {
-            Connection conn = DriverManager.getConnection(url);
+            Connection conn = DriverManager.getConnection(App.url);
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             //
@@ -577,10 +577,10 @@ public class Receptionist extends Stage {
         String sql = "Select * "
                 + " FROM patients"
                 + " WHERE patientID = '" + patID + "';";
-        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
+
 
         try {
-            Connection conn = DriverManager.getConnection(url);
+            Connection conn = DriverManager.getConnection(App.url);
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             //
@@ -762,14 +762,14 @@ public class Receptionist extends Stage {
         }
 
         private ComboBox getPatOrders(int patientID) {
-            String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
+    
             String sql = "Select orderCodes.orders "
                     + " FROM patientOrders "
                     + " INNER JOIN orderCodes ON patientOrders.orderCodeID = orderCodes.orderID "
                     + " WHERE patientID = '" + patientID + "';";
             ComboBox value = new ComboBox();
             try {
-                Connection conn = DriverManager.getConnection(url);
+                Connection conn = DriverManager.getConnection(App.url);
                 Statement stmt = conn.createStatement();
                 ResultSet rs = stmt.executeQuery(sql);
                 //
@@ -793,10 +793,10 @@ public class Receptionist extends Stage {
             String sql = "Select * "
                     + " FROM patients"
                     + " WHERE email = '" + patEmail + "' AND full_name = '" + patFullName + "';";
-            String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
+    
 
             try {
-                Connection conn = DriverManager.getConnection(url);
+                Connection conn = DriverManager.getConnection(App.url);
                 Statement stmt = conn.createStatement();
                 ResultSet rs = stmt.executeQuery(sql);
                 //

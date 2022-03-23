@@ -155,7 +155,7 @@ public class Technician extends Stage {
     private void populateTable() {
         appointmentsTable.getItems().clear();
         //Connect to database
-        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
+
         String sql = "Select appt_id, patient_id, patients.full_name, time, statusCode.status"
                 + " FROM appointments"
                 + " INNER JOIN statusCode ON appointments.statusCode = statusCode.statusID"
@@ -164,7 +164,7 @@ public class Technician extends Stage {
                 + " ORDER BY time ASC;";
 
         try {
-            Connection conn = DriverManager.getConnection(url);
+            Connection conn = DriverManager.getConnection(App.url);
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             //
@@ -202,7 +202,7 @@ public class Technician extends Stage {
     }
 
     private String getPatOrders(int patientID, int aInt) {
-        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
+
         String sql = "Select orderCodes.orders "
                 + " FROM appointmentsOrdersConnector "
                 + " INNER JOIN orderCodes ON appointmentsOrdersConnector.orderCodeID = orderCodes.orderID "
@@ -210,7 +210,7 @@ public class Technician extends Stage {
 
         String value = "";
         try {
-            Connection conn = DriverManager.getConnection(url);
+            Connection conn = DriverManager.getConnection(App.url);
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             //
@@ -349,10 +349,10 @@ public class Technician extends Stage {
         try {
             FileInputStream temp = new FileInputStream(file);
 
-            String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
+    
             String sql = "INSERT INTO images (patientID, apptID, image) VALUES (?, ?, ?);";
             try {
-                Connection conn = DriverManager.getConnection(url);
+                Connection conn = DriverManager.getConnection(App.url);
                 PreparedStatement pstmt = conn.prepareStatement(sql);
                 pstmt.setInt(1, patID);
                 pstmt.setInt(2, apptId);
@@ -448,14 +448,14 @@ public class Technician extends Stage {
         //Connect to database
         ArrayList<Image> list = new ArrayList<Image>();
 
-        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
+
         String sql = "SELECT *"
                 + " FROM images"
                 + " WHERE patientID = '" + patID + "' AND apptID = '" + apptId + "'"
                 + " ORDER BY imageID DESC;";
 
         try {
-            Connection conn = DriverManager.getConnection(url);
+            Connection conn = DriverManager.getConnection(App.url);
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             //
@@ -475,12 +475,12 @@ public class Technician extends Stage {
     }
 
     private void updateAppointmentStatus(int patID, int apptId) {
-        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
+
         String sql = "UPDATE appointments"
                 + " SET statusCode = 4"
                 + " WHERE appt_id = '" + apptId + "';";
         try {
-            Connection conn = DriverManager.getConnection(url);
+            Connection conn = DriverManager.getConnection(App.url);
             Statement stmt = conn.createStatement();
             stmt.execute(sql);
             stmt.close();

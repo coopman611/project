@@ -17,6 +17,7 @@ public class App extends Application {
     public static User user;
     public static String fileName = "risDirectory";
     public static String imagePathDirectory = "Favicons/";
+    public static String url = "jdbc:sqlite:C:/sqlite/" + fileName;
 
     @Override
     public void start(Stage stage) {
@@ -51,7 +52,6 @@ public class App extends Application {
 
     //Create a database
     public static void createDatabase(String fileName) {
-        String url = "jdbc:sqlite:C:/sqlite/" + fileName;
         try {
             Connection conn = DriverManager.getConnection(url);
             if (conn != null) {
@@ -220,7 +220,6 @@ public class App extends Application {
 
     //In future, all population statements will be put in here
     public static void executeSQLStatement(String sql) {
-        String url = "jdbc:sqlite:C://sqlite/" + fileName;
         try {
             Connection conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
