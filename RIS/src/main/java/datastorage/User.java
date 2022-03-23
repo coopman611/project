@@ -27,7 +27,10 @@ public class User {
     }
 
     public ImageView getPfpView() {
-        return new ImageView(pfp);
+        ImageView pfpView = new ImageView(pfp);
+        pfpView.setPreserveRatio(true);
+        pfpView.setFitHeight(30);
+        return pfpView;
     }
 
     public void setPfp(Image pfp) {
