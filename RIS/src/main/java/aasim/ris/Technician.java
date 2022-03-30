@@ -20,7 +20,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -38,7 +37,6 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -155,7 +153,7 @@ public class Technician extends Stage {
     private void populateTable() {
         appointmentsTable.getItems().clear();
         //Connect to database
-
+        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
         String sql = "Select appt_id, patient_id, patients.full_name, time, statusCode.status"
                 + " FROM appointments"
                 + " INNER JOIN statusCode ON appointments.statusCode = statusCode.statusID"
@@ -164,7 +162,7 @@ public class Technician extends Stage {
                 + " ORDER BY time ASC;";
 
         try {
-            Connection conn = DriverManager.getConnection(App.url);
+            Connection conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             //
@@ -202,7 +200,7 @@ public class Technician extends Stage {
     }
 
     private String getPatOrders(int patientID, int aInt) {
-
+        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
         String sql = "Select orderCodes.orders "
                 + " FROM appointmentsOrdersConnector "
                 + " INNER JOIN orderCodes ON appointmentsOrdersConnector.orderCodeID = orderCodes.orderID "
@@ -210,7 +208,7 @@ public class Technician extends Stage {
 
         String value = "";
         try {
-            Connection conn = DriverManager.getConnection(App.url);
+            Connection conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             //
@@ -256,9 +254,8 @@ public class Technician extends Stage {
         Label patInfo = new Label("Patient: " + fullname + "\t Order/s Requested: " + order + "\n");
         Label imgInfo = new Label("Images Uploaded: " + fullname + "\t Order/s Requested: " + order);
         fileChooser.getExtensionFilters().addAll(
-                new FileChooser.ExtensionFilter("JPG Files", "*.jpg", "*.jpeg"),
-                new FileChooser.ExtensionFilter("GIF Files", "*.gif"),
-                new FileChooser.ExtensionFilter("PNG Files", "*.png")
+                new FileChooser.ExtensionFilter("Image Files", "*.png")
+        //                 new FileChooser.ExtensionFilter("HTML Files", "*.htm")
         );
         Button complete = new Button("Fulfill Order");
         complete.setId("complete");
@@ -349,10 +346,10 @@ public class Technician extends Stage {
         try {
             FileInputStream temp = new FileInputStream(file);
 
-    
+            String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
             String sql = "INSERT INTO images (patientID, apptID, image) VALUES (?, ?, ?);";
             try {
-                Connection conn = DriverManager.getConnection(App.url);
+                Connection conn = DriverManager.getConnection(url);
                 PreparedStatement pstmt = conn.prepareStatement(sql);
                 pstmt.setInt(1, patID);
                 pstmt.setInt(2, apptId);
@@ -377,42 +374,17 @@ public class Technician extends Stage {
         Label label = new Label("You are uploading the images: ");
         //Images
         VBox imgContainer = new VBox();
-
         ArrayList<Image> list = retrieveUploadedImages(patID, apptId);
-        ArrayList<HBox> hbox = new ArrayList<HBox>();
-
         if (list.isEmpty()) {
             System.out.println("Error, image list is empty");
         } else {
-            int counter = 0;
-            int hboxCounter = 0;
-            for (int i = 0; i < (list.size() / 2) + 1; i++) {
-                hbox.add(new HBox());
-            }
             for (Image i : list) {
-                if (counter > 2) {
-                    counter++;
-                    hboxCounter++;
-                }
                 ImageView temp = new ImageView(i);
-                temp.setPreserveRatio(true);
-                temp.setFitHeight(300);
-                Button download = new Button("Download");
-                VBox tempBox = new VBox(temp);
-                tempBox.setId("borderOnHover");
-                tempBox.setSpacing(5);
-                tempBox.setAlignment(Pos.CENTER);
-                tempBox.setPadding(new Insets(10));
-                hbox.get(hboxCounter).getChildren().addAll(tempBox);
-                counter++;
+                imgContainer.getChildren().add(temp);
             }
         }
-
-        for (HBox temp : hbox) {
-            imgContainer.getChildren().add(temp);
-        }
-        ScrollPane s1 = new ScrollPane(imgContainer);
-        //
+        ScrollPane s1 = new ScrollPane();
+        s1.setContent(imgContainer);
         //End Images
         Button confirm = new Button("Confirm");
         confirm.setId("complete");
@@ -448,14 +420,14 @@ public class Technician extends Stage {
         //Connect to database
         ArrayList<Image> list = new ArrayList<Image>();
 
-
+        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
         String sql = "SELECT *"
                 + " FROM images"
                 + " WHERE patientID = '" + patID + "' AND apptID = '" + apptId + "'"
                 + " ORDER BY imageID DESC;";
 
         try {
-            Connection conn = DriverManager.getConnection(App.url);
+            Connection conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             //
@@ -475,12 +447,12 @@ public class Technician extends Stage {
     }
 
     private void updateAppointmentStatus(int patID, int apptId) {
-
+        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
         String sql = "UPDATE appointments"
                 + " SET statusCode = 4"
                 + " WHERE appt_id = '" + apptId + "';";
         try {
-            Connection conn = DriverManager.getConnection(App.url);
+            Connection conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
             stmt.execute(sql);
             stmt.close();

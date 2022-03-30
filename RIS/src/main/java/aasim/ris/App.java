@@ -17,7 +17,6 @@ public class App extends Application {
     public static User user;
     public static String fileName = "risDirectory";
     public static String imagePathDirectory = "Favicons/";
-    public static String url = "jdbc:sqlite:C:/sqlite/" + fileName;
 
     @Override
     public void start(Stage stage) {
@@ -32,7 +31,9 @@ public class App extends Application {
     }
 
     public static void main1(String[] args) {
+        
         //Create
+        
         createDatabase(fileName);
         createAndPopulateTables(fileName);
         createAppointmentTable(fileName);
@@ -43,15 +44,19 @@ public class App extends Application {
         createImageTable(fileName);
         createDocPatientConnectorTable(fileName);
         createRadReportTable(fileName);
+        createPatientPayment();
+//        createTotalCost();
 ////        Populate
         populateTablesStatus(fileName);
         populateTablesAdmin(fileName);
 //////        Duplication bug if you run these multiple times, leave commented out
+
         launch();
     }
 
     //Create a database
     public static void createDatabase(String fileName) {
+        String url = "jdbc:sqlite:C:/sqlite/" + fileName;
         try {
             Connection conn = DriverManager.getConnection(url);
             if (conn != null) {
@@ -165,13 +170,6 @@ public class App extends Application {
                 + ");";
         executeSQLStatement(sql);
 
-        sql = "CREATE TABLE radPatientConnector ("
-                + " patientID INTEGER UNIQUE, "
-                + " userID INTEGER, "
-                + " UNIQUE(patientID, alertID) "
-                + ");";
-        executeSQLStatement(sql);
-
     }
 
     public static void createStatusCodesTable(String fileName) {
@@ -185,9 +183,9 @@ public class App extends Application {
     public static void createOrderCodesTable(String fileName) {
         String sql = "CREATE TABLE orderCodes (\n"
                 + "	orderID INTEGER PRIMARY KEY,\n"
-                + "	orders VARCHAR(45) UNIQUE \n"
-                + "     "
-                + ");";
+                + "	orders VARCHAR(45) UNIQUE, \n"
+                + "   cost REAL  "
+                + ");"; 
         executeSQLStatement(sql);
     }
 
@@ -220,6 +218,7 @@ public class App extends Application {
 
     //In future, all population statements will be put in here
     public static void executeSQLStatement(String sql) {
+        String url = "jdbc:sqlite:C://sqlite/" + fileName;
         try {
             Connection conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
@@ -251,11 +250,26 @@ public class App extends Application {
         executeSQLStatement(sql6);
         executeSQLStatement(sql7);
         executeSQLStatement(sql8);
+
     }
+    public static void createPatientPayment() {
+        //String sql2 = "DROP TABLE patientPayments;";
+        //executeSQLStatement(sql2);
+        String sql = "CREATE TABLE patientPayments(\n"
+                + "apptID INTEGER, \n"
+                + "time TEXT, \n"
+                + "patientPayment REAL, "
+                + "byPatient INTEGER" // when byPatient will be one and when not will be zero
+                + ");";
+        executeSQLStatement(sql);
+    }
+    
 
     public static void populateTablesAdmin(String fileName) {
         String sql = "INSERT INTO users(email, full_name, username, password, role) VALUES ('god@gmail.com', 'Administrator Dave', 'admin', 'admin', '1');\n";
         executeSQLStatement(sql);
     }
+
+     
 
 }

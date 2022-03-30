@@ -104,14 +104,14 @@ public class Login extends Stage {
 //    Opens new stage for user's role
 //    
     private void loginCheck() {
-
+        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
 
         String username = inputUsername.getText();
         String password = inputPassword.getText();
         String sql = "Select * FROM users WHERE username = '" + username + "' AND password = '" + password + "' AND enabled = 1;";
 
         try {
-            Connection conn = DriverManager.getConnection(App.url);
+            Connection conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
 

@@ -275,10 +275,12 @@ public class UserInfo extends Stage {
             x.setMaximized(true);
             this.hide();
         } else if (App.user.getRole() == 6) {
+            //Billing
             Stage x = new Billing();
             x.show();
             x.setMaximized(true);
             this.hide();
+
         } else if (App.user.getRole() == 1) {
             Stage x = new Administrator();
             x.show();

@@ -5,9 +5,6 @@ import datastorage.User;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URLConnection;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -49,11 +46,8 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
-import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
-import org.apache.commons.io.FileUtils;
 
 public class Rad extends Stage {
     //navbar
@@ -168,7 +162,7 @@ public class Rad extends Stage {
     private void populateTable() {
         appointmentsTable.getItems().clear();
         //connects to database
-
+        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
         String sql = "Select appt_id, patient_id, patients.full_name, time, statusCode.status"
                 + " FROM appointments"
                 + " INNER JOIN statusCode ON appointments.statusCode = statusCode.statusID"
@@ -176,7 +170,7 @@ public class Rad extends Stage {
                 + " WHERE statusCode = 4"
                 + " ORDER BY time ASC;";
         try {
-            Connection conn = DriverManager.getConnection(App.url);
+            Connection conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             //
@@ -209,7 +203,7 @@ public class Rad extends Stage {
     }
 
     private String getPatOrders(int patientID, int aInt) {
-
+        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
         String sql = "Select orderCodes.orders "
                 + " FROM appointmentsOrdersConnector "
                 + " INNER JOIN orderCodes ON appointmentsOrdersConnector.orderCodeID = orderCodes.orderID "
@@ -217,7 +211,7 @@ public class Rad extends Stage {
 
         String value = "";
         try {
-            Connection conn = DriverManager.getConnection(App.url);
+            Connection conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             //
@@ -312,48 +306,15 @@ public class Rad extends Stage {
         //viewImg.setId("View Image");
 
         VBox imgContainer = new VBox();
-        ArrayList<Pair> list = retrieveUploadedImages(apptId);
-        ArrayList<HBox> hbox = new ArrayList<HBox>();
-        int counter = 0;
-        int hboxCounter = 0;
+        ArrayList<Image> list = retrieveUploadedImages(patID, apptId);
         if (list.isEmpty()) {
             System.out.println("Error, image list is empty");
         } else {
-            for (int i = 0; i < (list.size() / 2) + 1; i++) {
-                hbox.add(new HBox());
-            }
-            for (Pair i : list) {
-                if (counter > 2) {
-                    counter++;
-                    hboxCounter++;
-                }
-                ImageView temp = new ImageView(i.getImg());
-                temp.setPreserveRatio(true);
-                temp.setFitHeight(300);
-                Button download = new Button("Download");
-                VBox tempBox = new VBox(temp, download);
-                tempBox.setId("borderOnHover");
-                tempBox.setSpacing(5);
-                tempBox.setAlignment(Pos.CENTER);
-                tempBox.setPadding(new Insets(10));
-                hbox.get(hboxCounter).getChildren().addAll(tempBox);
-                download.setOnAction(new EventHandler<ActionEvent>() {
-                    @Override
-                    public void handle(ActionEvent e) {
-                        DirectoryChooser directoryChooser = new DirectoryChooser();
-                        File selectedDirectory = directoryChooser.showDialog(x);
-                        downloadImage(i, selectedDirectory);
-                    }
-
-                });
-                counter++;
+            for (Image i : list) {
+                ImageView temp = new ImageView(i);
+                imgContainer.getChildren().add(temp);
             }
         }
-        for (HBox i : hbox) {
-            imgContainer.getChildren().add(i);
-        }
-        imgContainer.setSpacing(10);
-        imgContainer.setPadding(new Insets(10));
         ScrollPane s1 = new ScrollPane();
         s1.setContent(imgContainer);
 
@@ -362,7 +323,7 @@ public class Rad extends Stage {
 
         Button cancel = new Button("Cancel");
         cancel.setId("cancel");
-        HBox btnContainer = new HBox(cancel, confirm, s1);
+        HBox btnContainer = new HBox(cancel, reportText, confirm, s1);
         btnContainer.setSpacing(25);
         y.getStylesheets().add("file:stylesheet.css");
         x.setScene(new Scene(y));
@@ -384,7 +345,7 @@ public class Rad extends Stage {
             }
         });
 
-        VBox container = new VBox(s1, label, reportText, btnContainer);
+        VBox container = new VBox(label, btnContainer);
         y.setCenter(container);
         x.show();
     }
@@ -394,26 +355,65 @@ public class Rad extends Stage {
         App.executeSQLStatement(sql);
     }
 
-    private ArrayList<Pair> retrieveUploadedImages(int apptId) {
+    private void completeOrder(int patID, int apptId) {
+        Stage x = new Stage();
+        x.initOwner(this);
+        x.setMaximized(true);
+        x.initModality(Modality.WINDOW_MODAL);
+        BorderPane y = new BorderPane();
+        Label label = new Label("Images: ");
+        //Images
+        VBox imgContainer = new VBox();
+        ArrayList<Image> list = retrieveUploadedImages(patID, apptId);
+        if (list.isEmpty()) {
+            System.out.println("Error, image list is empty");
+        } else {
+            for (Image i : list) {
+                ImageView temp = new ImageView(i);
+                imgContainer.getChildren().add(temp);
+            }
+        }
+        ScrollPane s1 = new ScrollPane();
+        s1.setContent(imgContainer);
+        //End Images
+
+        Button cancel = new Button("Close");
+        cancel.setId("Close");
+        HBox btnContainer = new HBox(cancel);
+        btnContainer.setSpacing(25);
+        VBox container = new VBox(label, s1, btnContainer);
+        y.setCenter(container);
+        y.getStylesheets().add("file:stylesheet.css");
+        x.setScene(new Scene(y));
+        x.show();
+
+        cancel.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent e) {
+                x.close();
+            }
+        });
+
+    }
+
+    private ArrayList<Image> retrieveUploadedImages(int patID, int apptId) {
         //Connect to database
-        ArrayList<Pair> list = new ArrayList<Pair>();
+        ArrayList<Image> list = new ArrayList<Image>();
 
-
+        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
         String sql = "SELECT *"
                 + " FROM images"
-                + " WHERE apptID = '" + apptId + "'"
+                + " WHERE patientID = '" + patID + "' AND apptID = '" + apptId + "'"
                 + " ORDER BY imageID DESC;";
 
         try {
-            Connection conn = DriverManager.getConnection(App.url);
+            Connection conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             //
             while (rs.next()) {
                 //What I receieve:  image
-                Pair pair = new Pair(new Image(rs.getBinaryStream("image")), rs.getInt("imageID"));
-                pair.fis = rs.getBinaryStream("image");
-                list.add(pair);
+                list.add(new Image(rs.getBinaryStream("image")));
 //                System.out.println(rs.getBinaryStream("image"));
             }
             //
@@ -427,12 +427,12 @@ public class Rad extends Stage {
     }
 
     private void updateAppointmentStatus(int patID, int apptId) {
-
+        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
         String sql = "UPDATE appointments"
                 + " SET statusCode = 5"
                 + " WHERE appt_id = '" + apptId + "';";
         try {
-            Connection conn = DriverManager.getConnection(App.url);
+            Connection conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
             stmt.execute(sql);
             stmt.close();
@@ -440,48 +440,6 @@ public class Rad extends Stage {
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
-    }
-
-    private void downloadImage(Pair img, File selectedDirectory) {
-        try {
-            String mimeType = URLConnection.guessContentTypeFromStream(img.fis);
-            System.out.print(mimeType);
-            mimeType = mimeType.replace("image/", "");
-            File outputFile = new File(selectedDirectory.getPath() + "/" + img.imgID + "." + mimeType);
-            FileUtils.copyInputStreamToFile(img.fis, outputFile);
-        } catch (IOException ex) {
-            Logger.getLogger(ReferralDoctor.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-    }
-
-    private class Pair {
-
-        Image img;
-        Integer imgID;
-        InputStream fis;
-
-        public Pair(Image img, Integer imgID) {
-            this.img = img;
-            this.imgID = imgID;
-        }
-
-        public Image getImg() {
-            return img;
-        }
-
-        public void setImg(Image img) {
-            this.img = img;
-        }
-
-        public Integer getImgID() {
-            return imgID;
-        }
-
-        public void setImgID(Integer imgID) {
-            this.imgID = imgID;
-        }
-
     }
 
 }

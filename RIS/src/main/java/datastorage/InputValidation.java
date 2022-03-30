@@ -95,5 +95,19 @@ public class InputValidation {
         }
         return true;
     }
+     public static boolean validatePayment(String payment) {
+        try{
+            Float.parseFloat(payment);
+        }catch(Exception b){
+            Alert a = new Alert(Alert.AlertType.INFORMATION);
+            a.setTitle("Error");
+            a.setHeaderText("Try Again");
+            a.setContentText("Please enter a valid payment.\n");
+            a.show();
+            return false;
+        }
+        return true;
+    }
+
 
 }

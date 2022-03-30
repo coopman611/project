@@ -15,6 +15,9 @@ public class Order {
     private int orderID;
     private String order;
     public Button placeholder = new Button("placeholder");
+    private float cost;
+
+    
 
     public Order(int orderID, String order) {
         this.orderID = orderID;
@@ -43,6 +46,13 @@ public class Order {
 
     public void setPlaceholder(Button placeholder) {
         this.placeholder = placeholder;
+    }
+    public float getCost() {
+        return cost;
+    }
+
+    public void setCost(float cost) {
+        this.cost = cost;
     }
 
 }

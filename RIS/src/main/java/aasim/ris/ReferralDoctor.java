@@ -5,15 +5,6 @@ import datastorage.InputValidation;
 import datastorage.Patient;
 import datastorage.PatientAlert;
 import datastorage.User;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.URLConnection;
-import java.nio.file.StandardCopyOption;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -22,8 +13,6 @@ import java.sql.Statement;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javafx.collections.FXCollections;
 import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
@@ -50,10 +39,8 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.stage.DirectoryChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import org.apache.commons.io.FileUtils;
 
 public class ReferralDoctor extends Stage {
     //Navbar
@@ -191,14 +178,14 @@ public class ReferralDoctor extends Stage {
     private void populateTable() {
         patientsTable.getItems().clear();
         //Connect to database
-
+        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
         String sql = "Select docPatientConnector.patientID, patients.email, patients.full_name, patients.dob, patients.address, patients.insurance"
                 + " FROM docPatientConnector"
                 + " INNER JOIN patients ON docPatientConnector.patientID = patients.patientID"
                 + " WHERE docPatientConnector.referralDocID = '" + App.user.getUserID() + "';";
 
         try {
-            Connection conn = DriverManager.getConnection(App.url);
+            Connection conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             //
@@ -427,10 +414,10 @@ public class ReferralDoctor extends Stage {
         String sql = "Select * "
                 + " FROM patients"
                 + " WHERE email = '" + email + "' AND full_name = '" + name + "';";
-
+        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
 
         try {
-            Connection conn = DriverManager.getConnection(App.url);
+            Connection conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             //
@@ -703,7 +690,7 @@ public class ReferralDoctor extends Stage {
     private void populateAppointmentsTable(Patient pat) {
         appointmentsTable.getItems().clear();
         //Connect to database
-
+        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
         String sql = "Select appointments.appt_id, appointments.time, statusCode.status"
                 + " FROM appointments"
                 + " INNER JOIN statusCode ON appointments.statusCode = statusCode.statusID "
@@ -711,7 +698,7 @@ public class ReferralDoctor extends Stage {
                 + " ORDER BY time ASC;";
 
         try {
-            Connection conn = DriverManager.getConnection(App.url);
+            Connection conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             //
@@ -752,14 +739,14 @@ public class ReferralDoctor extends Stage {
     }
 
     private String getPatOrders(int patientID) {
-
+        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
         String sql = "Select orderCodes.orders "
                 + " FROM patientOrders "
                 + " INNER JOIN orderCodes ON patientOrders.orderCodeID = orderCodes.orderID "
                 + " WHERE patientID = '" + patientID + "';";
         String value = "";
         try {
-            Connection conn = DriverManager.getConnection(App.url);
+            Connection conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             //
@@ -778,7 +765,7 @@ public class ReferralDoctor extends Stage {
     }
 
     private String getPatOrders(int patientID, int aInt) {
-
+        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
         String sql = "Select orderCodes.orders "
                 + " FROM appointmentsOrdersConnector "
                 + " INNER JOIN orderCodes ON appointmentsOrdersConnector.orderCodeID = orderCodes.orderID "
@@ -786,7 +773,7 @@ public class ReferralDoctor extends Stage {
 
         String value = "";
         try {
-            Connection conn = DriverManager.getConnection(App.url);
+            Connection conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             //
@@ -898,12 +885,12 @@ public class ReferralDoctor extends Stage {
     }
 
     private ComboBox populateOrdersDropdown() {
-
+        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
         String sql = "Select orders "
                 + " FROM orderCodes;";
         ComboBox dropdown = new ComboBox();
         try {
-            Connection conn = DriverManager.getConnection(App.url);
+            Connection conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             //
@@ -938,57 +925,38 @@ public class ReferralDoctor extends Stage {
         confirm.setId("complete");
         //
         VBox imgContainer = new VBox();
-
         ArrayList<Pair> list = retrieveUploadedImages(appt.getApptID());
-        ArrayList<HBox> hbox = new ArrayList<HBox>();
-
         if (list.isEmpty()) {
             System.out.println("Error, image list is empty");
         } else {
             int counter = 0;
-            int hboxCounter = 0;
-            for (int i = 0; i < (list.size() / 2) + 1; i++) {
-                hbox.add(new HBox());
-            }
             for (Pair i : list) {
-                if (counter > 2) {
-                    counter++;
-                    hboxCounter++;
-                }
                 ImageView temp = new ImageView(i.getImg());
                 temp.setPreserveRatio(true);
                 temp.setFitHeight(300);
-                Button download = new Button("Download");
-                VBox tempBox = new VBox(temp, download);
-                tempBox.setId("borderOnHover");
-                tempBox.setSpacing(5);
-                tempBox.setAlignment(Pos.CENTER);
-                tempBox.setPadding(new Insets(10));
-                hbox.get(hboxCounter).getChildren().addAll(tempBox);
-                download.setOnAction(new EventHandler<ActionEvent>() {
-                    @Override
-                    public void handle(ActionEvent e) {
-                        DirectoryChooser directoryChooser = new DirectoryChooser();
-                        File selectedDirectory = directoryChooser.showDialog(x);
-                        downloadImage(i, selectedDirectory);
-                    }
+//                Button download = new Button("Download");
+                imgContainer.getChildren().addAll(temp);
 
-                });
+//                download.setOnAction(new EventHandler<ActionEvent>() {
+//                    @Override
+//                    public void handle(ActionEvent e) {
+//                        DirectoryChooser directoryChooser = new DirectoryChooser();
+//                        File selectedDirectory = directoryChooser.showDialog(x);
+//
+//                        downloadImage(i.getImgID(), selectedDirectory);
+//                    }
+//
+//                });
                 counter++;
             }
         }
-
-        for (HBox temp : hbox) {
-            imgContainer.getChildren().add(temp);
-        }
-        ScrollPane s1 = new ScrollPane(imgContainer);
+        ScrollPane s1 = new ScrollPane();
+        s1.setContent(imgContainer);
         //
         Label radiologyReport = new Label();
         radiologyReport.setText("Radiology Report: \n" + getRadiologyReport(appt.getApptID()) + "\n\n");
         HBox container = new HBox(s1);
-        ScrollPane s2 = new ScrollPane(radiologyReport);
-        s2.setPrefHeight(400);
-        VBox center = new VBox(container, s2, confirm);
+        VBox center = new VBox(container, radiologyReport, confirm);
         container.setSpacing(10);
         center.setAlignment(Pos.CENTER);
         center.setPadding(new Insets(10));
@@ -1012,22 +980,20 @@ public class ReferralDoctor extends Stage {
         //Connect to database
         ArrayList<Pair> list = new ArrayList<Pair>();
 
-
+        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
         String sql = "SELECT *"
                 + " FROM images"
                 + " WHERE apptID = '" + apptId + "'"
                 + " ORDER BY imageID DESC;";
 
         try {
-            Connection conn = DriverManager.getConnection(App.url);
+            Connection conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             //
             while (rs.next()) {
                 //What I receieve:  image
-                Pair pair = new Pair(new Image(rs.getBinaryStream("image")), rs.getInt("imageID"));
-                pair.fis = rs.getBinaryStream("image");
-                list.add(pair);
+                list.add(new Pair(new Image(rs.getBinaryStream("image")), rs.getInt("imageID")));
 //                System.out.println(rs.getBinaryStream("image"));
             }
             //
@@ -1042,12 +1008,12 @@ public class ReferralDoctor extends Stage {
 
     private String getRadiologyReport(int apptID) {
         String value = "";
-
+        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
         String sql = "SELECT writtenReport "
                 + " FROM report"
                 + " WHERE apptID = '" + apptID + "';";
         try {
-            Connection conn = DriverManager.getConnection(App.url);
+            Connection conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             //
@@ -1074,14 +1040,14 @@ public class ReferralDoctor extends Stage {
 
     private void populatePaList() {
         paList.clear();
-
+        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
         String sql = "Select patientAlerts.alertID, patientAlerts.alert "
                 + " FROM patientAlerts "
                 + " "
                 + " ;";
 
         try {
-            Connection conn = DriverManager.getConnection(App.url);
+            Connection conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             //
@@ -1101,7 +1067,7 @@ public class ReferralDoctor extends Stage {
 
     private String getFlagsFromDatabase(int aInt) {
 
-
+        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
         String val = "";
         String sql = "Select orderCodes.orders "
                 + " FROM flags "
@@ -1110,7 +1076,7 @@ public class ReferralDoctor extends Stage {
                 + ";";
 
         try {
-            Connection conn = DriverManager.getConnection(App.url);
+            Connection conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             //
@@ -1131,7 +1097,7 @@ public class ReferralDoctor extends Stage {
 
     private void populateAllergies(Patient z) {
         allergies.clear();
-
+        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
         String sql = "Select patientAlerts.alertID, patientAlerts.alert "
                 + " FROM patientAlerts "
                 + " INNER JOIN alertsPatientConnector ON patientAlerts.alertID = alertsPatientConnector.alertID "
@@ -1139,7 +1105,7 @@ public class ReferralDoctor extends Stage {
                 + ";";
 
         try {
-            Connection conn = DriverManager.getConnection(App.url);
+            Connection conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             //
@@ -1157,24 +1123,10 @@ public class ReferralDoctor extends Stage {
         }
     }
 
-    private void downloadImage(Pair img, File selectedDirectory) {
-        try {
-            String mimeType = URLConnection.guessContentTypeFromStream(img.fis);
-            System.out.print(mimeType);
-            mimeType = mimeType.replace("image/", "");
-            File outputFile = new File(selectedDirectory.getPath() + "/" + img.imgID + "." + mimeType);
-            FileUtils.copyInputStreamToFile(img.fis, outputFile);
-        } catch (IOException ex) {
-            Logger.getLogger(ReferralDoctor.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-    }
-
     private class Pair {
 
         Image img;
         Integer imgID;
-        InputStream fis;
 
         public Pair(Image img, Integer imgID) {
             this.img = img;

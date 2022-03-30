@@ -12,12 +12,17 @@ import javafx.scene.control.Button;
  * @author 14048
  */
 public class Appointment {
+float total;
 
+    
     int apptID, patientID;
     String time, status, order;
 
     String fullName;
     public Button placeholder = new Button("Placeholder");
+    public Button button = new Button("Button");
+
+   
 
     public Appointment(int apptID, int patientID, String time, String status, String order) {
         this.apptID = apptID;
@@ -25,6 +30,20 @@ public class Appointment {
         this.time = time;
         this.status = status;
         this.order = order;
+    }
+     public Button getButton() {
+        return button;
+    }
+
+    public void setButton(Button button) {
+        this.button = button;
+    }
+    public float getTotal() {
+        return total;
+    }
+
+    public void setTotal(float total) {
+        this.total = total;
     }
 
     public Button getPlaceholder() {

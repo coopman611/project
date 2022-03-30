@@ -40,7 +40,6 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -188,7 +187,7 @@ public class Receptionist extends Stage {
     private void populateTable() {
         table.getItems().clear();
         //Connect to database
-
+        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
         String sql = "Select appt_id, patient_id, patients.full_name, time, statusCode.status"
                 + " FROM appointments"
                 + " INNER JOIN statusCode ON appointments.statusCode = statusCode.statusID "
@@ -197,7 +196,7 @@ public class Receptionist extends Stage {
                 + " ORDER BY time ASC;";
 
         try {
-            Connection conn = DriverManager.getConnection(App.url);
+            Connection conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             //
@@ -231,7 +230,7 @@ public class Receptionist extends Stage {
     }
 
     private String getPatOrders(int patientID, int aInt) {
-
+        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
         String sql = "Select orderCodes.orders "
                 + " FROM appointmentsOrdersConnector "
                 + " INNER JOIN orderCodes ON appointmentsOrdersConnector.orderCodeID = orderCodes.orderID "
@@ -239,7 +238,7 @@ public class Receptionist extends Stage {
 
         String value = "";
         try {
-            Connection conn = DriverManager.getConnection(App.url);
+            Connection conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             //
@@ -312,11 +311,11 @@ public class Receptionist extends Stage {
                 container.getChildren().clear();
 
                 DatePicker datePicker = new DatePicker();
-                Text text = new Text("Insert Date: ");
-                Text text1 = new Text("Insert Time (HH:MM): ");
+                Label text = new Label("Insert Date: ");
+                Label text1 = new Label("Insert Time (HH:MM): ");
                 TextField time = new TextField("HH:MM");
-//                text.setPrefWidth(100);
-//                text1.setPrefWidth(150);
+                text.setPrefWidth(100);
+                text1.setPrefWidth(150);
                 Button submit = new Button("Submit");
                 submit.setPrefWidth(100);
                 submit.setId("complete");
@@ -399,17 +398,17 @@ public class Receptionist extends Stage {
         x.setWidth(300);
         scene.getStylesheets().add("file:stylesheet.css");
         //
-        Text emailText = new Text("Email: ");
+        Label emailLabel = new Label("Email: ");
         TextField email = new TextField(z.getEmail());
-        HBox emailContainer = new HBox(emailText, email);
+        HBox emailContainer = new HBox(emailLabel, email);
 
-        Text addressText = new Text("Address: ");
+        Label addressLabel = new Label("Address: ");
         TextField address = new TextField(z.getAddress());
-        HBox addressContainer = new HBox(addressText, address);
+        HBox addressContainer = new HBox(addressLabel, address);
 
-        Text insuranceText = new Text("Insurance: ");
+        Label insuranceLabel = new Label("Insurance: ");
         TextField insurance = new TextField(z.getInsurance());
-        HBox insuranceContainer = new HBox(insuranceText, insurance);
+        HBox insuranceContainer = new HBox(insuranceLabel, insurance);
 
         Button submit = new Button("Submit");
         submit.setId("complete");
@@ -418,7 +417,7 @@ public class Receptionist extends Stage {
         ArrayList<PatientAlert> alertsToRemoveForThisPatient = new ArrayList<PatientAlert>();
         VBox patientAlertContainer = new VBox();
         for (PatientAlert a : paList) {
-            Text Text = new Text(a.getAlert());
+            Label label = new Label(a.getAlert());
             ComboBox dropdown = new ComboBox();
             dropdown.getItems().addAll("Yes", "No");
             if (allergies.contains(a)) {
@@ -426,7 +425,7 @@ public class Receptionist extends Stage {
             } else {
                 dropdown.setValue("No");
             }
-            HBox temp = new HBox(Text, dropdown);
+            HBox temp = new HBox(label, dropdown);
             temp.setSpacing(10);
             temp.setPadding(new Insets(10));
 
@@ -486,14 +485,14 @@ public class Receptionist extends Stage {
 
     private ArrayList<PatientAlert> populatePaList() {
         ArrayList<PatientAlert> paList = new ArrayList<>();
-
+        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
         String sql = "Select patientAlerts.alertID, patientAlerts.alert "
                 + " FROM patientAlerts "
                 + " "
                 + " ;";
 
         try {
-            Connection conn = DriverManager.getConnection(App.url);
+            Connection conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             //
@@ -514,7 +513,7 @@ public class Receptionist extends Stage {
 
     private ArrayList<PatientAlert> populateAllergies(Patient z) {
         ArrayList<PatientAlert> allergies = new ArrayList<>();
-
+        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
         String sql = "Select patientAlerts.alertID, patientAlerts.alert "
                 + " FROM patientAlerts "
                 + " INNER JOIN alertsPatientConnector ON patientAlerts.alertID = alertsPatientConnector.alertID "
@@ -522,7 +521,7 @@ public class Receptionist extends Stage {
                 + ";";
 
         try {
-            Connection conn = DriverManager.getConnection(App.url);
+            Connection conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             //
@@ -543,7 +542,7 @@ public class Receptionist extends Stage {
 
     private String getFlagsFromDatabase(int aInt) {
 
-
+        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
         String val = "";
         String sql = "Select orderCodes.orders "
                 + " FROM flags "
@@ -552,7 +551,7 @@ public class Receptionist extends Stage {
                 + ";";
 
         try {
-            Connection conn = DriverManager.getConnection(App.url);
+            Connection conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             //
@@ -577,10 +576,10 @@ public class Receptionist extends Stage {
         String sql = "Select * "
                 + " FROM patients"
                 + " WHERE patientID = '" + patID + "';";
-
+        String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
 
         try {
-            Connection conn = DriverManager.getConnection(App.url);
+            Connection conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             //
@@ -637,14 +636,14 @@ public class Receptionist extends Stage {
             TextField patEmail = new TextField("Email");
             Button check = new Button("Pull Patient Information");
             //time && order
-            Text text = new Text("Insert Date: ");
-            Text text1 = new Text("Insert Time (HH:MM): ");
+            Label text = new Label("Insert Date: ");
+            Label text1 = new Label("Insert Time (HH:MM): ");
             TextField time = new TextField("HH:MM");
-//            text.setPrefWidth(100);
-//            text1.setPrefWidth(150);
+            text.setPrefWidth(100);
+            text1.setPrefWidth(150);
 
-            Text tutorial = new Text("Click to remove: ");
-//            tutorial.setPrefWidth(100);
+            Label tutorial = new Label("Click to remove: ");
+            tutorial.setPrefWidth(100);
 
             Button submit = new Button("Submit");
             submit.setId("complete");
@@ -688,8 +687,8 @@ public class Receptionist extends Stage {
                     pat = pullPatientInfo(patFullName.getText(), patEmail.getText());
                     if (pat != null) {
                         check.setVisible(false);
-                        Text request = new Text("Orders Requested: ");
-//                        request.setPrefWidth(150);
+                        Label request = new Label("Orders Requested: ");
+                        request.setPrefWidth(150);
                         ComboBox dropdown = getPatOrders(pat.getPatientID());
                         dropdown.setPrefWidth(100);
 
@@ -762,14 +761,14 @@ public class Receptionist extends Stage {
         }
 
         private ComboBox getPatOrders(int patientID) {
-    
+            String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
             String sql = "Select orderCodes.orders "
                     + " FROM patientOrders "
                     + " INNER JOIN orderCodes ON patientOrders.orderCodeID = orderCodes.orderID "
                     + " WHERE patientID = '" + patientID + "';";
             ComboBox value = new ComboBox();
             try {
-                Connection conn = DriverManager.getConnection(App.url);
+                Connection conn = DriverManager.getConnection(url);
                 Statement stmt = conn.createStatement();
                 ResultSet rs = stmt.executeQuery(sql);
                 //
@@ -793,10 +792,10 @@ public class Receptionist extends Stage {
             String sql = "Select * "
                     + " FROM patients"
                     + " WHERE email = '" + patEmail + "' AND full_name = '" + patFullName + "';";
-    
+            String url = "jdbc:sqlite:C://sqlite/" + App.fileName;
 
             try {
-                Connection conn = DriverManager.getConnection(App.url);
+                Connection conn = DriverManager.getConnection(url);
                 Statement stmt = conn.createStatement();
                 ResultSet rs = stmt.executeQuery(sql);
                 //
